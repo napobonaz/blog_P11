@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+</script>
+<style>
+  :root{ --paper:#EEF0EA; --paper-line:#C9CEC2; --ink:#1E2A38; --graphite:#5B6259; --stamp:#B03A2E; --brass:#8A6A3B; --card:#F6F7F2; }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{ margin:0; background: linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0/100% 40px, var(--paper); background-attachment:fixed; color:var(--ink); font-family:'IBM Plex Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--ink); }
+  a:focus-visible{ outline:2px solid var(--stamp); outline-offset:3px; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:32px 32px 96px; }
+  .runner{ display:flex; align-items:center; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--graphite); border-bottom:1px solid var(--paper-line); padding-bottom:14px; margin-bottom:40px; }
+  .runner a{ text-decoration:none; color:var(--ink); }
+  .runner a:hover{ color:var(--stamp); }
+  .coversheet{ border:1.5px solid var(--ink); background:var(--card); padding:32px 32px 20px; margin-bottom:40px; }
+  .coversheet .eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.14em; color:var(--stamp); text-transform:uppercase; margin:0 0 10px; }
+  .coversheet h1{ font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.02em; font-size:clamp(28px,4.6vw,44px); margin:0 0 10px; line-height:1.08; }
+  .coversheet .dek{ font-size:16px; color:var(--graphite); max-width:46em; margin:0 0 24px; line-height:1.55; }
+  .titleblock{ display:flex; flex-wrap:wrap; border-top:1px solid var(--ink); font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--graphite); }
+  .titleblock div{ padding:10px 20px 0 0; margin-right:20px; }
+  .titleblock span{ display:block; color:var(--ink); font-size:13px; margin-top:2px; }
+  .hero{ border:1.5px solid var(--ink); background:var(--card); margin-bottom:8px; overflow:hidden; }
+  .hero img{ display:block; width:100%; max-height:520px; object-fit:cover; }
+  figure.hero-figure{ margin:0 0 48px; }
+  article{ max-width:68ch; margin:0 auto; }
+  article h2{ font-family:'Oswald',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:0.01em; font-size:24px; margin:48px 0 16px; padding-bottom:8px; border-bottom:1px solid var(--paper-line); }
+  article h3, article h4{ font-family:'Oswald',sans-serif; font-weight:600; letter-spacing:0.01em; font-size:18px; text-transform:uppercase; margin:32px 0 12px; color:var(--ink); }
+  article p{ font-size:16px; line-height:1.7; color:#2B3644; margin:0 0 20px; }
+  article a{ color:var(--stamp); }
+  figure.inline-figure{ margin:32px auto; }
+  figure.inline-figure img{ display:block; width:100%; border:1.5px solid var(--ink); }
+  figure.inline-figure figcaption{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--graphite); padding:8px 2px 0; }
+  .code-lang{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--stamp); margin:28px 0 6px; }
+  pre{ background:var(--ink); color:#E8EAE3; font-family:'IBM Plex Mono',monospace; font-size:13px; line-height:1.6; padding:18px 20px; overflow:auto; margin:0 0 8px; border-radius:8px; }
+  .code-desc{ font-size:14px; color:var(--graphite); margin:0 0 28px; }
+  .model-figure{ margin:32px 0 8px; }
+  canvas.model-canvas{ width:100%; display:block; background:var(--paper); border:1.5px solid var(--ink); touch-action:none; }
+  .model-controls{ display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--graphite); padding:8px 2px 0; text-transform:uppercase; letter-spacing:0.04em; }
+  .tags{ display:flex; gap:8px; flex-wrap:wrap; margin:40px 0 0; }
+  .tags .tag{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.05em; text-transform:uppercase; border:1px solid var(--brass); color:var(--brass); padding:3px 8px; }
+  footer.colophon{ max-width:68ch; margin:64px auto 0; padding-top:20px; border-top:1px solid var(--paper-line); font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--graphite); text-transform:uppercase; letter-spacing:0.05em; }
+  footer.colophon a{ color:var(--ink); text-decoration:none; }
+  footer.colophon a:hover{ color:var(--stamp); }
+  @media (max-width:640px){ article{ max-width:100%; } }
+  @media (prefers-reduced-motion: reduce){ html{ scroll-behavior:auto; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="runner">
+    <a href="../testfu.html" id="back-link-top">← Back</a>
+    <span>2026-08-13</span>
+  </div>
+  <header class="coversheet">
+    <p class="eyebrow">Category</p>
+    <h1>T1</h1>
+    
+    <div class="titleblock">
+      <div>Category<span>Category</span></div>
+      <div>Date<span>2026-08-13</span></div>
+      
+    </div>
+  </header>
+  <article>
+    <h2 style="text-align:left">Test</h2>
+    
+  </article>
+  <footer class="colophon">
+    <a href="../testfu.html" id="back-link-bottom">← Back</a>
+  </footer>
+</div>
+<script>
+  function enableBack(id){
+    const link = document.getElementById(id);
+    if(!link) return;
+    if(window.history.length > 1 && document.referrer){
+      link.addEventListener('click', (e) => { e.preventDefault(); window.history.back(); });
+    }
+  }
+  enableBack('back-link-top');
+  enableBack('back-link-bottom');
+</script>
+</body>
+</html>

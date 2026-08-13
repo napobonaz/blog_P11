@@ -333,7 +333,7 @@
     </fieldset>
 
     <fieldset>
-      <legend>Entries</legend>
+      <legend id="entriesLegend">Entries</legend>
       <div id="rowTableWrap"></div>
     </fieldset>
 
@@ -686,10 +686,12 @@ function renderRowTable(){
   const wrap = document.getElementById('rowTableWrap');
   wrap.innerHTML = '';
 
+  document.getElementById('entriesLegend').textContent = l.isRoot ? 'Entries (main categories)' : 'Posts';
+
   if(l.isRoot){
     const note = document.createElement('p');
     note.className = 'hint';
-    note.textContent = 'These are main categories. Press "+ new post" on one to add a post to its matching subcategory list automatically.';
+    note.textContent = 'These are main categories. Press "Posts" on one to view and manage the posts in its subcategory.';
     wrap.appendChild(note);
   }
 
@@ -778,22 +780,22 @@ function renderRowTable(){
 
     const entryActions = document.createElement('div');
     entryActions.className = 'entry-actions';
-    const newPostBtn = document.createElement('button');
-    newPostBtn.type = 'button'; newPostBtn.className = 'remove-entry entry-newpost';
-    newPostBtn.textContent = '+ new post';
-    newPostBtn.title = l.isRoot
-      ? 'Adds a post to this category\'s subcategory list'
-      : 'Opens the Post Editor, attached to this list';
-    newPostBtn.addEventListener('click', () => {
-      if(l.isRoot){
-        const match = findLinkedListForRow(row);
-        if(match) startNewPostForList(match[0]);
-        else handleUnlinkedCategoryPost(row);
-      } else {
-        startNewPostForList(currentListId);
-      }
-    });
-    entryActions.append(newPostBtn, removeBtn);
+    if(l.isRoot){
+      const postsBtn = document.createElement('button');
+      postsBtn.type = 'button'; postsBtn.className = 'remove-entry entry-newpost';
+      postsBtn.textContent = 'Posts';
+      postsBtn.title = 'View and manage the posts in this category\'s subcategory';
+      postsBtn.addEventListener('click', () => viewPostsForRow(row));
+      entryActions.appendChild(postsBtn);
+    } else {
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button'; editBtn.className = 'remove-entry entry-newpost';
+      editBtn.textContent = 'Edit';
+      editBtn.title = 'Open this post in the Post Editor';
+      editBtn.addEventListener('click', () => editPost(row));
+      entryActions.appendChild(editBtn);
+    }
+    entryActions.appendChild(removeBtn);
 
     body.append(title, desc, toggle, metaFields, entryActions);
     card.append(thumb, body);
@@ -834,18 +836,18 @@ function renderRowTable(){
     scheduleSave();
   });
 
-  const addCard = document.createElement('div');
-  addCard.className = 'add-card';
-  addCard.textContent = '+ Add entry';
-  addCard.addEventListener('click', addBlankRow);
-  grid.appendChild(addCard);
-
-  if(!l.isRoot){
+  if(l.isRoot){
+    const addCard = document.createElement('div');
+    addCard.className = 'add-card';
+    addCard.textContent = '+ Add Category';
+    addCard.addEventListener('click', addBlankRow);
+    grid.appendChild(addCard);
+  } else {
     const newPostCard = document.createElement('div');
     newPostCard.className = 'add-card add-card-post';
-    newPostCard.textContent = '+ New post';
-    newPostCard.title = 'Opens the Post Editor, already attached to this list';
-    newPostCard.addEventListener('click', () => startNewPostForList(currentListId));
+    newPostCard.textContent = '+ Add Post';
+    newPostCard.title = 'Adds a new post card you can fill in directly';
+    newPostCard.addEventListener('click', addBlankRow);
     grid.appendChild(newPostCard);
   }
 
@@ -890,9 +892,11 @@ function findLinkedListForRow(row){
   return found || null;
 }
 
-function handleUnlinkedCategoryPost(row){
+function ensureLinkedListForRow(row){
+  const existing = findLinkedListForRow(row);
+  if(existing) return existing;
   const label = row.title || 'This category';
-  if(!confirm('"' + label + '" isn\'t linked to a subcategory list yet. Create one now to hold its posts?')) return;
+  if(!confirm('"' + label + '" isn\'t linked to a subcategory list yet. Create one now to hold its posts?')) return null;
   const slug = slugify(row.title) || ('subcat-' + (Object.keys(lists).length + 1));
   const id = newListId();
   lists[id] = defaultList(row.title || 'New subcategory');
@@ -902,7 +906,22 @@ function handleUnlinkedCategoryPost(row){
   if(!row.url){ row.url = 'subcat/' + lists[id].pageFile; renderRowTable(); }
   refreshListSelect();
   scheduleSave();
-  startNewPostForList(id);
+  return [id, lists[id]];
+}
+
+/* "Posts" on a root (main category) entry opens that category's
+   subcategory list here in the Lists tab — same card-grid layout as any
+   other list's entries, just scoped to that one subcategory's posts. */
+function viewPostsForRow(row){
+  const match = ensureLinkedListForRow(row);
+  if(!match) return;
+  currentListId = match[0];
+  refreshListSelect();
+  loadListIntoForm();
+  switchTab('lists');
+  requestAnimationFrame(() => {
+    document.getElementById('rowTableWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 }
 
 /* ---------- File System Access: save-in-place handles ---------- */
@@ -912,6 +931,8 @@ const csvHandles = new Map();   // listId -> FileSystemFileHandle
 const pageHandles = new Map();  // listId -> FileSystemFileHandle
 let postHtmlHandle = null;
 let currentPostRow = null; // row object already added to a list's entries for this post draft, if any
+const postContentCache = new Map(); // row -> { heroFile, blocks: [...] } — full editable content, cached on save (this session only)
+const postHandleCache = new Map();  // row -> FileSystemFileHandle for that post's saved file
 
 async function verifyPermission(handle){
   const opts = { mode: 'readwrite' };
@@ -1511,7 +1532,7 @@ setupDropzone(document.getElementById('heroDrop'), document.getElementById('hero
 
 /* ---------- Heading block ---------- */
 
-function addHeadingBlock(){
+function addHeadingBlock(preset){
   const { card, body } = cardShell('heading', 'Heading');
   const row = document.createElement('div'); row.className = 'row';
   const level = document.createElement('select'); level.className = 'f-level';
@@ -1526,13 +1547,18 @@ function addHeadingBlock(){
   body.append(row, toolbar, field('Text', text));
   [level, align].forEach(el => el.addEventListener('change', scheduleSave));
   text.addEventListener('input', scheduleSave);
+  if(preset){
+    level.value = preset.level || 'h2';
+    align.value = preset.align || 'left';
+    text.innerHTML = preset.html || '';
+  }
   blockListEl.appendChild(card);
   scheduleSave();
 }
 
 /* ---------- Text block ---------- */
 
-function addTextBlock(){
+function addTextBlock(preset){
   const { card, body } = cardShell('text', 'Text block');
   const row = document.createElement('div'); row.className = 'row';
   const font = document.createElement('select'); font.className = 'f-font';
@@ -1557,6 +1583,13 @@ function addTextBlock(){
   font.addEventListener('change', () => { applyTextStyle(); scheduleSave(); });
   align.addEventListener('change', () => { applyTextStyle(); scheduleSave(); });
   html.addEventListener('input', scheduleSave);
+  if(preset){
+    font.value = preset.font || 'sans';
+    size.value = preset.size || 16;
+    sizeOut.textContent = size.value + 'px';
+    align.value = preset.align || 'left';
+    html.innerHTML = preset.html || '';
+  }
   applyTextStyle();
   body.append(row, toolbar, field('Text', html));
   blockListEl.appendChild(card);
@@ -1565,12 +1598,13 @@ function addTextBlock(){
 
 /* ---------- Image block ---------- */
 
-function addImageBlock(){
+function addImageBlock(preset){
   const { card, body } = cardShell('image', 'Image');
   const dz = document.createElement('div'); dz.className = 'dropzone'; dz.tabIndex = 0;
   dz.textContent = 'Drag & drop an image, or click to choose one';
   const fileInput = document.createElement('input'); fileInput.type = 'file'; fileInput.accept = 'image/*'; fileInput.hidden = true;
-  setupDropzone(dz, fileInput, async (file) => {
+
+  async function applyImageFile(file){
     const store = postFileStore.get(card.id) || {};
     store.image = file; postFileStore.set(card.id, store);
     const dataUrl = await fileToDataURL(file);
@@ -1579,8 +1613,9 @@ function addImageBlock(){
     dz.appendChild(img);
     const label = document.createElement('div'); label.textContent = file.name + ' — drop a different file to replace';
     dz.appendChild(label);
-    scheduleSave();
-  });
+  }
+
+  setupDropzone(dz, fileInput, (file) => { applyImageFile(file); scheduleSave(); });
   const alt = document.createElement('input'); alt.type = 'text'; alt.className = 'f-alt'; alt.placeholder = 'Describe the image (alt text)';
   const caption = document.createElement('input'); caption.type = 'text'; caption.className = 'f-caption'; caption.placeholder = 'Caption shown under the image';
   const row = document.createElement('div'); row.className = 'row';
@@ -1596,13 +1631,21 @@ function addImageBlock(){
   align.addEventListener('change', scheduleSave);
   body.append(field('Image', dz), fileInput, field('Description / alt text', alt), field('Caption', caption), row);
   body.append(mkHint('Import per drag & drop. On export, the file is embedded directly into the HTML.'));
+  if(preset){
+    alt.value = preset.alt || '';
+    caption.value = preset.caption || '';
+    width.value = preset.width || 100;
+    widthOut.textContent = width.value + '%';
+    align.value = preset.align || 'center';
+    if(preset.file) applyImageFile(preset.file);
+  }
   blockListEl.appendChild(card);
   scheduleSave();
 }
 
 /* ---------- Code block ---------- */
 
-function addCodeBlock(){
+function addCodeBlock(preset){
   const { card, body } = cardShell('code', 'Code block');
   const row = document.createElement('div'); row.className = 'row';
   const lang = document.createElement('input'); lang.type = 'text'; lang.className = 'f-lang'; lang.placeholder = 'e.g. python';
@@ -1618,13 +1661,21 @@ function addCodeBlock(){
   const desc = document.createElement('textarea'); desc.className = 'f-desc'; desc.rows = 2; desc.placeholder = 'Describe what this code does';
   [lang, code, desc].forEach(el => el.addEventListener('input', scheduleSave));
   body.append(row, field('Code (scrolls, rounded corners)', code), field('Code description', desc));
+  if(preset){
+    lang.value = preset.lang || '';
+    code.value = preset.code || '';
+    height.value = preset.height || 220;
+    heightOut.textContent = height.value + 'px';
+    code.style.height = height.value + 'px';
+    desc.value = preset.description || '';
+  }
   blockListEl.appendChild(card);
   scheduleSave();
 }
 
 /* ---------- 3D model block ---------- */
 
-function addModelBlock(){
+async function addModelBlock(preset){
   const { card, body } = cardShell('model', '3D model');
   const dz = document.createElement('div'); dz.className = 'dropzone'; dz.tabIndex = 0;
   dz.textContent = 'Drag & drop model files: a .obj or .fbx, plus optional .mtl and texture images';
@@ -1650,14 +1701,13 @@ function addModelBlock(){
     viewerHandle = await initModelViewer(canvas, arr);
     wireframe.checked = false;
     wireframe.onchange = () => viewerHandle.setWireframe(wireframe.checked);
-    scheduleSave();
   }
 
   dz.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', () => { if(fileInput.files.length) handleFiles(fileInput.files); });
+  fileInput.addEventListener('change', () => { if(fileInput.files.length){ handleFiles(fileInput.files); scheduleSave(); } });
   ['dragenter','dragover'].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); dz.classList.add('drag'); }));
   ['dragleave','drop'].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); dz.classList.remove('drag'); }));
-  dz.addEventListener('drop', e => { if(e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
+  dz.addEventListener('drop', e => { if(e.dataTransfer.files.length){ handleFiles(e.dataTransfer.files); scheduleSave(); } });
 
   const caption = document.createElement('input'); caption.type = 'text'; caption.className = 'f-caption'; caption.placeholder = 'Caption shown under the model';
   caption.addEventListener('input', scheduleSave);
@@ -1668,6 +1718,13 @@ function addModelBlock(){
     field('Caption', caption)
   );
   blockListEl.appendChild(card);
+  if(preset){
+    caption.value = preset.caption || '';
+    if(preset.files && preset.files.length){
+      await handleFiles(preset.files);
+      if(preset.wireframe){ wireframe.checked = true; viewerHandle.setWireframe(true); }
+    }
+  }
   scheduleSave();
 }
 
@@ -1778,6 +1835,93 @@ document.getElementById('clearPostBtn').addEventListener('click', () => {
   clearPostEditor();
   scheduleSave();
 });
+
+/* ---------- Snapshot / restore full post content, for the Edit button ---------- */
+
+function snapshotBlocks(){
+  return [...blockListEl.children].map(card => {
+    const type = card.dataset.type;
+    if(type === 'heading'){
+      return { type, level: card.querySelector('.f-level').value, align: card.querySelector('.f-align').value, html: card.querySelector('.f-text').innerHTML };
+    }
+    if(type === 'text'){
+      return { type, font: card.querySelector('.f-font').value, size: card.querySelector('.f-size').value, align: card.querySelector('.f-align').value, html: card.querySelector('.f-html').innerHTML };
+    }
+    if(type === 'image'){
+      const store = postFileStore.get(card.id);
+      return { type, file: store && store.image, alt: card.querySelector('.f-alt').value, caption: card.querySelector('.f-caption').value, width: card.querySelector('.f-width').value, align: card.querySelector('.f-align').value };
+    }
+    if(type === 'code'){
+      return { type, lang: card.querySelector('.f-lang').value, code: card.querySelector('.f-code').value, height: card.querySelector('.f-height').value, description: card.querySelector('.f-desc').value };
+    }
+    if(type === 'model'){
+      const store = postFileStore.get(card.id);
+      return { type, files: store && store.models, caption: card.querySelector('.f-caption').value, wireframe: card.querySelector('.f-wireframe').checked };
+    }
+    return null;
+  }).filter(Boolean);
+}
+
+async function restoreBlocksFromSnapshot(blocks){
+  for(const b of blocks){
+    if(b.type === 'heading') addHeadingBlock(b);
+    else if(b.type === 'text') addTextBlock(b);
+    else if(b.type === 'image') addImageBlock(b);
+    else if(b.type === 'code') addCodeBlock(b);
+    else if(b.type === 'model') await addModelBlock(b);
+  }
+}
+
+/* ---------- Edit an existing post ---------- */
+
+function editPost(row){
+  const hasContent = blockListEl.children.length > 0 || pval('metaTitle').trim() !== '';
+  if(hasContent && !confirm('Edit this post? The current post draft (not yet saved) will be cleared.')) return;
+
+  clearPostEditor();
+  switchTab('post');
+
+  const listId = currentListId;
+  document.getElementById('attachList').value = listId;
+  document.getElementById('attachList').dispatchEvent(new Event('change'));
+
+  document.getElementById('metaCategory').value = row.category || '';
+  document.getElementById('metaDate').value = row.date || '';
+  document.getElementById('metaTitle').value = row.title || '';
+  document.getElementById('metaDek').value = row.description || '';
+  document.getElementById('metaTags').value = row.tag || '';
+  const relEl = document.getElementById('postRelUrl');
+  relEl.value = row.url || relEl.value;
+  relEl.dataset.userEdited = '1';
+
+  currentPostRow = row;
+  postHtmlHandle = postHandleCache.get(row) || null;
+
+  const cached = postContentCache.get(row);
+  if(cached){
+    if(cached.heroFile){
+      postFileStore.set('__hero__', cached.heroFile);
+      fileToDataURL(cached.heroFile).then(dataUrl => {
+        const dz = document.getElementById('heroDrop');
+        dz.innerHTML = '';
+        const img = document.createElement('img'); img.className = 'preview'; img.src = dataUrl;
+        dz.appendChild(img);
+        const label = document.createElement('div'); label.textContent = cached.heroFile.name + ' — drop a different file to replace';
+        dz.appendChild(label);
+      });
+    }
+    restoreBlocksFromSnapshot(cached.blocks).then(() => { renderPostPreview(); scheduleSave(); });
+  } else {
+    const banner = document.getElementById('attachBanner');
+    banner.textContent = 'This post\'s content wasn\'t loaded in this browser session, so blocks start empty here — its metadata above is already filled in. Add content and Save to overwrite the file.';
+    banner.classList.add('show');
+  }
+
+  updatePostSaveStatus();
+  renderPostPreview();
+  scheduleSave();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
 /* ---------- Attach to list ---------- */
 
@@ -2033,6 +2177,9 @@ document.getElementById('exportPostBtn').addEventListener('click', async () => {
       }
       renumberRows(l);
       if(currentListId === attachId) renderRowTable();
+
+      postContentCache.set(currentPostRow, { heroFile: postFileStore.get('__hero__') || null, blocks: snapshotBlocks() });
+      if(postHtmlHandle) postHandleCache.set(currentPostRow, postHtmlHandle);
 
       const csvSaved = await saveCsvForList(attachId);
       note((csvSaved ? 'post + "' + l.label + '" CSV saved' : 'post saved — CSV not saved') + ' · ' + new Date().toLocaleTimeString());
