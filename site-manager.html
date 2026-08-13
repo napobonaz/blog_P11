@@ -143,6 +143,121 @@
     padding: 10px 14px; font-size: 13px; margin-bottom: 20px; display: none;
   }
   .banner.show{ display: block; }
+
+  /* ---------- Post editor: split layout + live preview ---------- */
+
+  .post-editor-layout{ display: flex; gap: 28px; align-items: flex-start; }
+  .post-editor-col{ flex: 1 1 480px; min-width: 320px; }
+  .post-preview-col{
+    flex: 1 1 420px; min-width: 320px;
+    position: sticky; top: 60px;
+    max-height: calc(100vh - 80px);
+    overflow: auto;
+    border: 1.5px solid var(--ink);
+    background: #fff;
+    padding: 26px 28px;
+  }
+  .preview-heading{
+    font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--stamp); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--paper-line);
+  }
+  @media (max-width: 980px){
+    .post-editor-layout{ flex-direction: column; }
+    .post-preview-col{ position: static; max-height: none; width: 100%; }
+  }
+
+  .pp-eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--stamp); margin-bottom:8px; }
+  .pp-title{ font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:26px; margin:0 0 10px; line-height:1.1; }
+  .pp-dek{ color:var(--graphite); font-size:14px; line-height:1.5; margin:0 0 20px; }
+  .pp-hero{ border:1.5px solid var(--ink); margin-bottom:24px; overflow:hidden; }
+  .pp-hero img{ width:100%; display:block; max-height:260px; object-fit:cover; }
+  .pp-article{ font-size:14.5px; line-height:1.7; color:#2B3644; }
+  #postPreview h2{ font-family:'Oswald',sans-serif; font-weight:600; text-transform:uppercase; font-size:20px; margin:28px 0 12px; padding-bottom:6px; border-bottom:1px solid var(--paper-line); }
+  #postPreview h3, #postPreview h4{ font-family:'Oswald',sans-serif; font-weight:600; text-transform:uppercase; font-size:15px; margin:20px 0 8px; }
+  #postPreview p{ margin:0 0 14px; }
+  .pp-figure{ margin:20px auto; }
+  .pp-figure img{ width:100%; display:block; border:1.5px solid var(--ink); }
+  .pp-figure figcaption{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--graphite); padding-top:5px; }
+  .pp-code-lang{ font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--stamp); margin:20px 0 5px; }
+  #postPreview pre{ background:var(--ink); color:#E8EAE3; font-family:'IBM Plex Mono',monospace; font-size:12px; line-height:1.5; padding:14px 16px; overflow:auto; border-radius:8px; margin:0 0 6px; }
+  .pp-code-desc{ font-size:12.5px; color:var(--graphite); margin:0 0 20px; }
+  .pp-model-stub{ border:1px dashed var(--paper-line); padding:14px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--graphite); text-align:center; margin:20px 0; }
+  .pp-tags{ display:flex; gap:6px; flex-wrap:wrap; margin-top:20px; }
+  .pp-tags span{ border:1px solid var(--brass); color:var(--brass); font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.05em; padding:2px 6px; }
+  .pp-empty{ color:var(--paper-line); font-style:italic; }
+  .pp-empty-block{ border:1px dashed var(--paper-line); padding:14px; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--graphite); margin:16px 0; }
+
+  /* ---------- Drag handles (post blocks) ---------- */
+
+  .drag-handle{ cursor: grab; padding: 2px 6px; user-select: none; }
+  .drag-handle:active{ cursor: grabbing; }
+  .block-card.dragging{ opacity: 0.35; }
+  .block-card.drag-over-top{ border-top: 3px solid var(--stamp); }
+  .block-card.drag-over-bottom{ border-bottom: 3px solid var(--stamp); }
+
+  /* ---------- Lists tab: visual card grid ---------- */
+
+  .row-grid{ display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; margin-top: 14px; }
+  .row-card{
+    position: relative; border: 1.5px solid var(--ink); background: var(--card);
+    display: flex; flex-direction: column;
+  }
+  .row-card.dragging{ opacity: 0.35; }
+  .row-card.drag-over{ outline: 2px solid var(--stamp); outline-offset: -2px; }
+  .row-card .thumb{
+    aspect-ratio: 16/10; border-bottom: 1.5px solid var(--ink); background: var(--paper);
+    position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
+  }
+  .row-card .thumb img{ width: 100%; height: 100%; object-fit: cover; }
+  .row-card .thumb .placeholder{
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--graphite);
+    text-transform: uppercase; letter-spacing: 0.06em; text-align: center;
+    background: repeating-linear-gradient(45deg, var(--paper-line) 0, var(--paper-line) 1px, transparent 1px, transparent 9px);
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  }
+  .row-card .dwg-no{
+    position: absolute; top: 7px; left: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    color: var(--stamp); background: var(--paper); padding: 1px 5px; border: 1px solid var(--ink);
+  }
+  .row-card .drag-handle{
+    position: absolute; top: 5px; right: 5px; font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    color: var(--ink); background: var(--paper); border: 1px solid var(--ink); padding: 1px 7px;
+  }
+  .row-card .card-body2{ padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .row-card .title-input{
+    font-family: 'Oswald', sans-serif; font-weight: 600; text-transform: uppercase; font-size: 14.5px;
+    border: none; background: transparent; padding: 2px 0; border-bottom: 1px dashed transparent; width: 100%;
+  }
+  .row-card .title-input:focus{ border-bottom-color: var(--paper-line); outline: none; }
+  .row-card .desc-input{
+    font-size: 12px; line-height: 1.5; border: none; background: transparent; resize: vertical;
+    min-height: 44px; padding: 2px 0; width: 100%; font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .row-card .desc-input:focus{ outline: none; background: #fff; }
+  .row-card .meta-toggle{
+    font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--graphite); background: none; border: none; text-align: left; padding: 4px 0 0; cursor: pointer;
+  }
+  .row-card .meta-toggle:hover{ color: var(--stamp); }
+  .row-card .meta-fields{ display: none; flex-direction: column; gap: 6px; margin-top: 4px; padding-top: 8px; border-top: 1px dashed var(--paper-line); }
+  .row-card .meta-fields.open{ display: flex; }
+  .row-card .meta-fields label{ font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--graphite); text-transform: uppercase; display: block; margin-bottom: 2px; }
+  .row-card .meta-fields input{ font-size: 12px; padding: 4px 6px; }
+  .row-card .meta-fields .mrow{ display: flex; gap: 6px; }
+  .row-card .meta-fields .mrow > div{ flex: 1; }
+  .row-card .remove-entry{
+    align-self: flex-start; margin-top: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid var(--paper-line); background: #fff;
+    padding: 3px 8px; color: var(--graphite);
+  }
+  .row-card .remove-entry:hover{ border-color: var(--stamp); color: var(--stamp); }
+
+  .add-card{
+    border: 1.5px dashed var(--paper-line); display: flex; align-items: center; justify-content: center;
+    min-height: 180px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--graphite); cursor: pointer;
+  }
+  .add-card:hover{ border-color: var(--stamp); color: var(--stamp); }
 </style>
 </head>
 <body>
@@ -223,10 +338,11 @@
     <div class="btn-row">
       <button class="btn" id="loadCsvBtn">Load existing CSV…</button>
       <input type="file" id="loadCsvInput" accept=".csv" hidden>
-      <button class="btn btn-stamp" id="exportCsvBtn">Export CSV ↓</button>
-      <button class="btn btn-stamp" id="exportPageBtn">Export page HTML ↓</button>
+      <button class="btn btn-stamp" id="exportCsvBtn">Save CSV</button>
+      <button class="btn btn-stamp" id="exportPageBtn">Save page HTML</button>
     </div>
-    <p class="hint">Export the page HTML once, when first creating this list. After that, just re-export the CSV when entries change — the page reads it at runtime.</p>
+    <p class="hint" id="listSaveHint">First save asks you to choose (or create) the file — after that it overwrites it directly, no dialog.</p>
+    <p class="hint" id="listSaveStatus"></p>
 
   </div>
 
@@ -235,74 +351,87 @@
 
     <div class="banner" id="attachBanner"></div>
 
-    <fieldset>
-      <legend>Attach to a list</legend>
-      <label class="field">Add this post's entry to</label>
-      <select id="attachList"></select>
-      <p class="hint">On export, a matching entry is appended to that list's table on the Lists tab (you'll still need to export that list's CSV separately).</p>
-    </fieldset>
+    <div class="post-editor-layout">
+      <div class="post-editor-col">
 
-    <fieldset>
-      <legend>Post metadata</legend>
-      <div class="row">
-        <div>
-          <label class="field">Category / eyebrow</label>
-          <input type="text" id="metaCategory" placeholder="e.g. Aerospace">
+        <fieldset>
+          <legend>Attach to a list</legend>
+          <label class="field">Add this post's entry to</label>
+          <select id="attachList"></select>
+          <p class="hint">On export, a matching entry is appended to that list's table on the Lists tab (you'll still need to export that list's CSV separately).</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Post metadata</legend>
+          <div class="row">
+            <div>
+              <label class="field">Category / eyebrow</label>
+              <input type="text" id="metaCategory" placeholder="e.g. Aerospace">
+            </div>
+            <div>
+              <label class="field">Date</label>
+              <input type="date" id="metaDate">
+            </div>
+          </div>
+          <label class="field">Title</label>
+          <input type="text" id="metaTitle" placeholder="Post title">
+          <label class="field">Dek (one-line summary)</label>
+          <textarea id="metaDek" rows="2" placeholder="One or two sentences that frame the post"></textarea>
+          <div class="row">
+            <div>
+              <label class="field">Tags (comma separated)</label>
+              <input type="text" id="metaTags" placeholder="Aerospace, Powertrain, VTOL">
+            </div>
+            <div>
+              <label class="field">Read time</label>
+              <input type="text" id="metaReadTime" placeholder="~9 min">
+            </div>
+          </div>
+          <label class="field">Hero image</label>
+          <div class="dropzone" id="heroDrop" tabindex="0">Drag &amp; drop an image, or click to choose one</div>
+          <input type="file" id="heroFile" accept="image/*" hidden>
+          <label class="field">Hero image description (alt text)</label>
+          <input type="text" id="heroAlt" placeholder="Describe the hero image">
+        </fieldset>
+
+        <fieldset>
+          <legend>Output paths</legend>
+          <div class="row">
+            <div>
+              <label class="field">Back link target</label>
+              <input type="text" id="postBackLink" placeholder="e.g. ../f1.html">
+            </div>
+            <div>
+              <label class="field">This post's relative URL (for the list entry)</label>
+              <input type="text" id="postRelUrl" placeholder="e.g. posts/new-post.html">
+            </div>
+          </div>
+          <p class="hint">These fill in automatically from the list you attach to, above — adjust if your folder layout differs.</p>
+        </fieldset>
+
+        <div id="blockList"></div>
+
+        <div class="add-toolbar">
+          <button data-add="heading">+ Heading</button>
+          <button data-add="text">+ Text block</button>
+          <button data-add="image">+ Image</button>
+          <button data-add="code">+ Code block</button>
+          <button data-add="model">+ 3D model</button>
         </div>
-        <div>
-          <label class="field">Date</label>
-          <input type="date" id="metaDate">
+        <p class="hint" style="text-align:center;margin-top:-30px;margin-bottom:40px;">Drag a block by its ⠿ handle to reorder.</p>
+
+        <div class="btn-row">
+          <button class="btn btn-stamp" id="exportPostBtn">Save post HTML</button>
+          <button class="btn" id="clearPostBtn">Clear this post</button>
         </div>
+        <p class="hint" id="postSaveStatus"></p>
+
       </div>
-      <label class="field">Title</label>
-      <input type="text" id="metaTitle" placeholder="Post title">
-      <label class="field">Dek (one-line summary)</label>
-      <textarea id="metaDek" rows="2" placeholder="One or two sentences that frame the post"></textarea>
-      <div class="row">
-        <div>
-          <label class="field">Tags (comma separated)</label>
-          <input type="text" id="metaTags" placeholder="Aerospace, Powertrain, VTOL">
-        </div>
-        <div>
-          <label class="field">Read time</label>
-          <input type="text" id="metaReadTime" placeholder="~9 min">
-        </div>
+
+      <div class="post-preview-col">
+        <div class="preview-heading">Live preview</div>
+        <div id="postPreview"></div>
       </div>
-      <label class="field">Hero image</label>
-      <div class="dropzone" id="heroDrop" tabindex="0">Drag &amp; drop an image, or click to choose one</div>
-      <input type="file" id="heroFile" accept="image/*" hidden>
-      <label class="field">Hero image description (alt text)</label>
-      <input type="text" id="heroAlt" placeholder="Describe the hero image">
-    </fieldset>
-
-    <fieldset>
-      <legend>Output paths</legend>
-      <div class="row">
-        <div>
-          <label class="field">Back link target</label>
-          <input type="text" id="postBackLink" placeholder="e.g. ../f1.html">
-        </div>
-        <div>
-          <label class="field">This post's relative URL (for the list entry)</label>
-          <input type="text" id="postRelUrl" placeholder="e.g. posts/new-post.html">
-        </div>
-      </div>
-      <p class="hint">These fill in automatically from the list you attach to, above — adjust if your folder layout differs.</p>
-    </fieldset>
-
-    <div id="blockList"></div>
-
-    <div class="add-toolbar">
-      <button data-add="heading">+ Heading</button>
-      <button data-add="text">+ Text block</button>
-      <button data-add="image">+ Image</button>
-      <button data-add="code">+ Code block</button>
-      <button data-add="model">+ 3D model</button>
-    </div>
-
-    <div class="btn-row">
-      <button class="btn btn-stamp" id="exportPostBtn">Export post HTML ↓</button>
-      <button class="btn" id="clearPostBtn">Clear this post</button>
     </div>
 
   </div>
@@ -400,7 +529,11 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 const STORAGE_KEY = 'siteManagerDraft';
 let saveTimer = null;
-function scheduleSave(){ clearTimeout(saveTimer); saveTimer = setTimeout(saveDraft, 700); }
+function scheduleSave(){
+  if(typeof renderPostPreview === 'function') renderPostPreview();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveDraft, 700);
+}
 function note(msg){ document.getElementById('autosaveNote').textContent = msg; }
 
 function saveDraft(){
@@ -409,7 +542,6 @@ function saveDraft(){
     note('draft autosaved · ' + new Date().toLocaleTimeString());
   } catch(e){ note('autosave failed (storage full?)'); }
 }
-
 function loadDraft(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -474,6 +606,7 @@ function loadListIntoForm(){
   document.getElementById('listParentLink').value = l.parentLink;
   document.getElementById('listTagline').value = l.tagline;
   renderRowTable();
+  updateListSaveStatus();
 }
 
 function bindListFormField(id, prop, transform){
@@ -528,7 +661,9 @@ document.getElementById('dupListBtn').addEventListener('click', () => {
 
 document.getElementById('deleteListBtn').addEventListener('click', () => {
   if(Object.keys(lists).length <= 1){ alert('At least one list must remain.'); return; }
-  if(!confirm('Delete "' + lists[currentListId].label + '"? This only affects the draft — any files you already exported are unaffected.')) return;
+  if(!confirm('Delete "' + lists[currentListId].label + '"? This only affects the draft — any files already saved to disk are unaffected.')) return;
+  csvHandles.delete(currentListId);
+  pageHandles.delete(currentListId);
   delete lists[currentListId];
   currentListId = Object.keys(lists)[0];
   refreshListSelect();
@@ -536,51 +671,144 @@ document.getElementById('deleteListBtn').addEventListener('click', () => {
   scheduleSave();
 });
 
-/* ---------- Row table ---------- */
+/* ---------- Row cards (visual, draggable) ---------- */
+
+function isPreviewableImage(url){
+  return /^(https?:|data:)/.test(url || '');
+}
 
 function renderRowTable(){
   const l = lists[currentListId];
   const wrap = document.getElementById('rowTableWrap');
   wrap.innerHTML = '';
-  if(!l.rows.length){
-    wrap.innerHTML = '<p class="hint">No entries yet — add one below, or load an existing CSV.</p>';
-    return;
-  }
-  const table = document.createElement('table');
-  table.className = 'rowtable';
-  table.innerHTML = `<thead><tr>
-    <th class="narrow">ID</th><th>Title</th><th>Description</th><th>URL</th><th>Image</th><th>Category</th><th>Tag</th><th>Date</th><th></th>
-  </tr></thead>`;
-  const tbody = document.createElement('tbody');
+
+  const grid = document.createElement('div');
+  grid.className = 'row-grid';
+
   l.rows.forEach((row, i) => {
-    const tr = document.createElement('tr');
-    const idTd = document.createElement('td');
-    idTd.className = 'narrow';
-    idTd.textContent = row.id || String(i+1).padStart(2,'0');
-    tr.appendChild(idTd);
-    ['title','description','url','image','category','tag','date'].forEach(col => {
-      const td = document.createElement('td');
+    const card = document.createElement('div');
+    card.className = 'row-card';
+    card.draggable = true;
+    card.dataset.index = i;
+
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb';
+    const dwg = document.createElement('span');
+    dwg.className = 'dwg-no';
+    dwg.textContent = 'DWG–' + (row.id || String(i+1).padStart(2,'0'));
+    const handle = document.createElement('span');
+    handle.className = 'drag-handle';
+    handle.textContent = '⠿';
+    thumb.append(dwg, handle);
+    if(isPreviewableImage(row.image)){
+      const img = document.createElement('img');
+      img.src = row.image; img.alt = '';
+      img.addEventListener('error', () => { img.remove(); addPlaceholder(); }, { once: true });
+      thumb.appendChild(img);
+    } else {
+      addPlaceholder();
+    }
+    function addPlaceholder(){
+      const ph = document.createElement('div');
+      ph.className = 'placeholder';
+      ph.textContent = row.image ? 'Preview not shown\n(local path)' : 'No preview yet';
+      thumb.appendChild(ph);
+    }
+
+    const body = document.createElement('div');
+    body.className = 'card-body2';
+
+    const title = document.createElement('input');
+    title.type = 'text'; title.className = 'title-input';
+    title.placeholder = 'Title';
+    title.value = row.title || '';
+    title.addEventListener('input', () => { row.title = title.value; scheduleSave(); });
+
+    const desc = document.createElement('textarea');
+    desc.className = 'desc-input'; desc.rows = 2;
+    desc.placeholder = 'Description';
+    desc.value = row.description || '';
+    desc.addEventListener('input', () => { row.description = desc.value; scheduleSave(); });
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button'; toggle.className = 'meta-toggle';
+    toggle.textContent = '⚙ url / image / tag / date';
+
+    const metaFields = document.createElement('div');
+    metaFields.className = 'meta-fields';
+
+    function metaInput(labelText, col, placeholder){
+      const w = document.createElement('div');
+      const lab = document.createElement('label'); lab.textContent = labelText;
       const inp = document.createElement('input');
-      inp.type = 'text';
-      inp.value = row[col] || '';
-      inp.addEventListener('input', () => { row[col] = inp.value; scheduleSave(); });
-      td.appendChild(inp);
-      tr.appendChild(td);
-    });
-    const ctrlTd = document.createElement('td');
-    ctrlTd.className = 'ctrl';
-    const up = document.createElement('button'); up.textContent = '↑';
-    up.addEventListener('click', () => { if(i>0){ [l.rows[i-1], l.rows[i]] = [l.rows[i], l.rows[i-1]]; renderRowTable(); scheduleSave(); } });
-    const down = document.createElement('button'); down.textContent = '↓';
-    down.addEventListener('click', () => { if(i<l.rows.length-1){ [l.rows[i+1], l.rows[i]] = [l.rows[i], l.rows[i+1]]; renderRowTable(); scheduleSave(); } });
-    const del = document.createElement('button'); del.textContent = '✕';
-    del.addEventListener('click', () => { l.rows.splice(i,1); renumberRows(l); renderRowTable(); scheduleSave(); });
-    ctrlTd.append(up, down, del);
-    tr.appendChild(ctrlTd);
-    tbody.appendChild(tr);
+      inp.type = 'text'; inp.value = row[col] || ''; inp.placeholder = placeholder || '';
+      inp.addEventListener('input', () => { row[col] = inp.value; if(col==='image') renderRowTable(); scheduleSave(); });
+      w.append(lab, inp);
+      return w;
+    }
+
+    const row1 = document.createElement('div'); row1.className = 'mrow';
+    row1.append(metaInput('URL', 'url', 'posts/example.html'), metaInput('Image', 'image', 'images/thumb.jpg'));
+    const row2 = document.createElement('div'); row2.className = 'mrow';
+    row2.append(metaInput('Category', 'category'), metaInput('Tag', 'tag'));
+    const row3 = document.createElement('div'); row3.className = 'mrow';
+    row3.append(metaInput('Date', 'date'));
+
+    metaFields.append(row1, row2, row3);
+
+    toggle.addEventListener('click', () => metaFields.classList.toggle('open'));
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button'; removeBtn.className = 'remove-entry';
+    removeBtn.textContent = '✕ remove entry';
+    removeBtn.addEventListener('click', () => { l.rows.splice(i,1); renumberRows(l); renderRowTable(); scheduleSave(); });
+
+    body.append(title, desc, toggle, metaFields, removeBtn);
+    card.append(thumb, body);
+    grid.appendChild(card);
   });
-  table.appendChild(tbody);
-  wrap.appendChild(table);
+
+  // drag reorder
+  grid.addEventListener('dragstart', (e) => {
+    const card = e.target.closest('.row-card');
+    if(!card || !e.target.closest('.drag-handle')){ if(card) e.preventDefault(); return; }
+    card.classList.add('dragging');
+    e.dataTransfer.setData('text/plain', card.dataset.index);
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  grid.addEventListener('dragend', (e) => {
+    const card = e.target.closest('.row-card');
+    if(card) card.classList.remove('dragging');
+    grid.querySelectorAll('.drag-over').forEach(c => c.classList.remove('drag-over'));
+  });
+  grid.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const card = e.target.closest('.row-card');
+    if(!card) return;
+    grid.querySelectorAll('.drag-over').forEach(c => c.classList.remove('drag-over'));
+    card.classList.add('drag-over');
+  });
+  grid.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const targetCard = e.target.closest('.row-card');
+    const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if(!targetCard || Number.isNaN(fromIdx)) return;
+    const toIdx = parseInt(targetCard.dataset.index, 10);
+    if(fromIdx === toIdx) return;
+    const [moved] = l.rows.splice(fromIdx, 1);
+    l.rows.splice(toIdx, 0, moved);
+    renumberRows(l);
+    renderRowTable();
+    scheduleSave();
+  });
+
+  const addCard = document.createElement('div');
+  addCard.className = 'add-card';
+  addCard.textContent = '+ Add entry';
+  addCard.addEventListener('click', () => document.getElementById('addRowBtn').click());
+  grid.appendChild(addCard);
+
+  wrap.appendChild(grid);
 }
 
 function renumberRows(l){
@@ -594,35 +822,138 @@ document.getElementById('addRowBtn').addEventListener('click', () => {
   scheduleSave();
 });
 
-/* ---------- Load / export CSV ---------- */
+/* ---------- File System Access: save-in-place handles ---------- */
 
-document.getElementById('loadCsvBtn').addEventListener('click', () => document.getElementById('loadCsvInput').click());
-document.getElementById('loadCsvInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if(!file) return;
-  const text = await file.text();
+const FS_SUPPORTED = 'showSaveFilePicker' in window;
+const csvHandles = new Map();   // listId -> FileSystemFileHandle
+const pageHandles = new Map();  // listId -> FileSystemFileHandle
+let postHtmlHandle = null;
+
+async function verifyPermission(handle){
+  const opts = { mode: 'readwrite' };
+  if((await handle.queryPermission(opts)) === 'granted') return true;
+  if((await handle.requestPermission(opts)) === 'granted') return true;
+  return false;
+}
+
+async function writeToHandle(handle, contents){
+  const writable = await handle.createWritable();
+  await writable.write(contents);
+  await writable.close();
+}
+
+function updateListSaveStatus(){
+  const el = document.getElementById('listSaveStatus');
+  const hint = document.getElementById('listSaveHint');
+  if(!FS_SUPPORTED){
+    hint.textContent = "Your browser doesn't support saving directly to a file — Save will download a new copy each time; replace the old file manually.";
+    el.textContent = '';
+    return;
+  }
+  const csvH = csvHandles.get(currentListId);
+  const pageH = pageHandles.get(currentListId);
+  const parts = [];
+  parts.push(csvH ? ('CSV linked: ' + csvH.name) : 'CSV not yet linked');
+  parts.push(pageH ? ('Page linked: ' + pageH.name) : 'Page not yet linked');
+  el.textContent = parts.join(' · ');
+}
+
+function updatePostSaveStatus(){
+  const el = document.getElementById('postSaveStatus');
+  if(!FS_SUPPORTED){ el.textContent = "Your browser doesn't support saving directly to a file — Save will download a new copy each time."; return; }
+  el.textContent = postHtmlHandle ? ('Linked: ' + postHtmlHandle.name) : 'Not yet linked — first save asks you to choose or create the file.';
+}
+
+/* ---------- Load / save CSV ---------- */
+
+function applyLoadedCsvRows(text, filename){
   const rows = parseCSV(text).map((r, i) => ({
     id: r.id || String(i+1).padStart(2,'0'), title: r.title||'', description: r.description||'',
     url: r.url||'', image: r.image||'', category: r.category||'', tag: r.tag||'', date: r.date||''
   }));
   lists[currentListId].rows = rows;
-  if(!lists[currentListId].csvFile) lists[currentListId].csvFile = file.name;
-  document.getElementById('listCsvFile').value = lists[currentListId].csvFile;
+  if(filename){
+    lists[currentListId].csvFile = filename;
+    document.getElementById('listCsvFile').value = filename;
+  }
   renderRowTable();
   scheduleSave();
+}
+
+document.getElementById('loadCsvBtn').addEventListener('click', async () => {
+  if(FS_SUPPORTED){
+    try{
+      const [handle] = await window.showOpenFilePicker({ types: [{ description: 'CSV file', accept: { 'text/csv': ['.csv'] } }] });
+      const file = await handle.getFile();
+      const text = await file.text();
+      applyLoadedCsvRows(text, file.name);
+      csvHandles.set(currentListId, handle);
+      updateListSaveStatus();
+    } catch(err){
+      if(err.name !== 'AbortError') alert('Could not open file: ' + err.message);
+    }
+  } else {
+    document.getElementById('loadCsvInput').click();
+  }
 });
 
-document.getElementById('exportCsvBtn').addEventListener('click', () => {
+document.getElementById('loadCsvInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const text = await file.text();
+  applyLoadedCsvRows(text, file.name);
+});
+
+async function saveCsvForList(){
   const l = lists[currentListId];
   if(!l.csvFile){ alert('Set a CSV filename first.'); return; }
-  downloadText(l.csvFile, serializeCSV(l.rows), 'text/csv');
-});
+  const contents = serializeCSV(l.rows);
+  if(!FS_SUPPORTED){ downloadText(l.csvFile, contents, 'text/csv'); return; }
+  try{
+    let handle = csvHandles.get(currentListId);
+    if(handle && !(await verifyPermission(handle))) handle = null;
+    if(!handle){
+      handle = await window.showSaveFilePicker({
+        suggestedName: l.csvFile,
+        types: [{ description: 'CSV file', accept: { 'text/csv': ['.csv'] } }]
+      });
+      csvHandles.set(currentListId, handle);
+      if(handle.name && handle.name !== l.csvFile){ l.csvFile = handle.name; document.getElementById('listCsvFile').value = handle.name; }
+    }
+    await writeToHandle(handle, contents);
+    note('saved ' + handle.name + ' · ' + new Date().toLocaleTimeString());
+    updateListSaveStatus();
+  } catch(err){
+    if(err.name !== 'AbortError') alert('Save failed: ' + err.message);
+  }
+}
 
-document.getElementById('exportPageBtn').addEventListener('click', () => {
+async function savePageForList(){
   const l = lists[currentListId];
   if(!l.pageFile){ alert('Set a page filename first.'); return; }
-  downloadText(l.pageFile, buildListPageHTML(l), 'text/html');
-});
+  const contents = buildListPageHTML(l);
+  if(!FS_SUPPORTED){ downloadText(l.pageFile, contents, 'text/html'); return; }
+  try{
+    let handle = pageHandles.get(currentListId);
+    if(handle && !(await verifyPermission(handle))) handle = null;
+    if(!handle){
+      handle = await window.showSaveFilePicker({
+        suggestedName: l.pageFile,
+        types: [{ description: 'HTML file', accept: { 'text/html': ['.html'] } }]
+      });
+      pageHandles.set(currentListId, handle);
+      if(handle.name && handle.name !== l.pageFile){ l.pageFile = handle.name; document.getElementById('listPageFile').value = handle.name; }
+    }
+    await writeToHandle(handle, contents);
+    note('saved ' + handle.name + ' · ' + new Date().toLocaleTimeString());
+    updateListSaveStatus();
+  } catch(err){
+    if(err.name !== 'AbortError') alert('Save failed: ' + err.message);
+  }
+}
+
+document.getElementById('exportCsvBtn').addEventListener('click', saveCsvForList);
+document.getElementById('exportPageBtn').addEventListener('click', savePageForList);
 
 function buildListPageHTML(l){
   const backLink = (!l.isRoot && l.parentLink)
@@ -952,10 +1283,16 @@ function cardShell(type, label){
   card.className = 'block-card';
   card.dataset.type = type;
   card.id = nextBlockId();
+  card.draggable = true;
   const head = document.createElement('div');
   head.className = 'card-head';
+  const left = document.createElement('span');
+  const handle = document.createElement('span');
+  handle.className = 'drag-handle';
+  handle.textContent = '⠿ ';
   const title = document.createElement('span');
   title.textContent = label;
+  left.append(handle, title);
   const ctrls = document.createElement('div');
   ctrls.className = 'ctrls';
   const up = mkBtn('↑', () => moveBlock(card, -1));
@@ -963,12 +1300,47 @@ function cardShell(type, label){
   const del = mkBtn('✕ remove', () => { postFileStore.delete(card.id); card.remove(); scheduleSave(); });
   del.classList.add('danger');
   ctrls.append(up, down, del);
-  head.append(title, ctrls);
+  head.append(left, ctrls);
   const body = document.createElement('div');
   body.className = 'card-body';
   card.append(head, body);
+
+  card.addEventListener('dragstart', (e) => {
+    if(!e.target.closest('.drag-handle')){ e.preventDefault(); return; }
+    card.classList.add('dragging');
+    e.dataTransfer.setData('text/plain', card.id);
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  card.addEventListener('dragend', () => {
+    card.classList.remove('dragging');
+    blockListEl.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(c => c.classList.remove('drag-over-top','drag-over-bottom'));
+  });
+
   return { card, body };
 }
+
+blockListEl.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  const overCard = e.target.closest('.block-card');
+  if(!overCard) return;
+  blockListEl.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(c => c.classList.remove('drag-over-top','drag-over-bottom'));
+  const rect = overCard.getBoundingClientRect();
+  const before = (e.clientY - rect.top) < rect.height / 2;
+  overCard.classList.add(before ? 'drag-over-top' : 'drag-over-bottom');
+});
+blockListEl.addEventListener('drop', (e) => {
+  e.preventDefault();
+  const overCard = e.target.closest('.block-card');
+  const draggingId = e.dataTransfer.getData('text/plain');
+  const dragging = document.getElementById(draggingId);
+  blockListEl.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(c => c.classList.remove('drag-over-top','drag-over-bottom'));
+  if(!overCard || !dragging || overCard === dragging) return;
+  const rect = overCard.getBoundingClientRect();
+  const before = (e.clientY - rect.top) < rect.height / 2;
+  if(before) blockListEl.insertBefore(dragging, overCard);
+  else blockListEl.insertBefore(dragging, overCard.nextSibling);
+  scheduleSave();
+});
 
 function mkBtn(txt, onClick){
   const b = document.createElement('button');
@@ -1212,6 +1584,86 @@ document.querySelectorAll('.add-toolbar [data-add]').forEach(b => {
   });
 });
 
+/* ---------- Live preview ---------- */
+
+function objectUrlFor(file){
+  if(!file._previewUrl) file._previewUrl = URL.createObjectURL(file);
+  return file._previewUrl;
+}
+
+function renderPostPreview(){
+  const wrap = document.getElementById('postPreview');
+  if(!wrap) return;
+
+  const meta = {
+    category: pval('metaCategory') || 'Category',
+    title: pval('metaTitle') || 'Untitled post',
+    dek: pval('metaDek') || '',
+    tags: pval('metaTags').split(',').map(s => s.trim()).filter(Boolean)
+  };
+
+  const heroFile = postFileStore.get('__hero__');
+  const heroHtml = heroFile
+    ? `<div class="pp-hero"><img src="${objectUrlFor(heroFile)}" alt=""></div>`
+    : '';
+
+  const blocksHtml = [...blockListEl.children].map(card => {
+    const type = card.dataset.type;
+    if(type === 'heading'){
+      const level = card.querySelector('.f-level').value;
+      const align = card.querySelector('.f-align').value;
+      const text = card.querySelector('.f-text').innerHTML || '<span class="pp-empty">Heading…</span>';
+      return `<${level} style="text-align:${align}">${text}</${level}>`;
+    }
+    if(type === 'text'){
+      const font = card.querySelector('.f-font').value;
+      const size = card.querySelector('.f-size').value;
+      const align = card.querySelector('.f-align').value;
+      const fam = { sans:"'IBM Plex Sans',sans-serif", serif:"'Source Serif 4',serif", mono:"'IBM Plex Mono',monospace", display:"'Oswald',sans-serif" }[font];
+      const html = card.querySelector('.f-html').innerHTML || '<span class="pp-empty">Text…</span>';
+      return `<div style="font-family:${fam};font-size:${size}px;text-align:${align};line-height:1.7;margin:0 0 16px;">${html}</div>`;
+    }
+    if(type === 'image'){
+      const store = postFileStore.get(card.id);
+      const width = card.querySelector('.f-width').value;
+      const align = card.querySelector('.f-align').value;
+      const caption = escapeHtml(card.querySelector('.f-caption').value);
+      const margin = align === 'center' ? 'margin-left:auto;margin-right:auto;' : (align === 'right' ? 'margin-left:auto;' : '');
+      if(store && store.image){
+        return `<figure class="pp-figure" style="width:${width}%;${margin}"><img src="${objectUrlFor(store.image)}" alt="">${caption ? `<figcaption>${caption}</figcaption>` : ''}</figure>`;
+      }
+      return `<div class="pp-empty-block">Image not added yet</div>`;
+    }
+    if(type === 'code'){
+      const lang = escapeHtml(card.querySelector('.f-lang').value);
+      const height = card.querySelector('.f-height').value;
+      const code = escapeHtml(card.querySelector('.f-code').value) || '// …';
+      const desc = escapeHtml(card.querySelector('.f-desc').value);
+      return `${lang ? `<p class="pp-code-lang">${lang}</p>` : ''}<pre style="height:${height}px;"><code>${code}</code></pre>${desc ? `<p class="pp-code-desc">${desc}</p>` : ''}`;
+    }
+    if(type === 'model'){
+      const caption = escapeHtml(card.querySelector('.f-caption').value);
+      const store = postFileStore.get(card.id);
+      const loaded = store && store.models && store.models.length;
+      return `<div class="pp-model-stub">◈ 3D model ${loaded ? '— rendered live in the block above' : '(none dropped yet)'}${caption ? '<br>' + caption : ''}</div>`;
+    }
+    return '';
+  }).join('\n');
+
+  const tagsHtml = meta.tags.length
+    ? `<div class="pp-tags">${meta.tags.map(t => `<span>${escapeHtml(t)}</span>`).join('')}</div>`
+    : '';
+
+  wrap.innerHTML = `
+    <div class="pp-eyebrow">${escapeHtml(meta.category)}</div>
+    <h1 class="pp-title">${escapeHtml(meta.title)}</h1>
+    ${meta.dek ? `<p class="pp-dek">${escapeHtml(meta.dek)}</p>` : ''}
+    ${heroHtml}
+    <div class="pp-article">${blocksHtml}</div>
+    ${tagsHtml}
+  `;
+}
+
 document.querySelectorAll('#metaTitle, #metaCategory, #metaDate, #metaDek, #metaTags, #metaReadTime, #heroAlt, #postBackLink, #postRelUrl')
   .forEach(el => el.addEventListener('input', scheduleSave));
 
@@ -1222,6 +1674,9 @@ document.getElementById('clearPostBtn').addEventListener('click', () => {
   ['metaCategory','metaDate','metaTitle','metaDek','metaTags','metaReadTime','heroAlt','postBackLink','postRelUrl']
     .forEach(id => document.getElementById(id).value = '');
   document.getElementById('heroDrop').textContent = 'Drag & drop an image, or click to choose one';
+  postHtmlHandle = null;
+  updatePostSaveStatus();
+  renderPostPreview();
   scheduleSave();
 });
 
@@ -1437,7 +1892,23 @@ document.getElementById('exportPostBtn').addEventListener('click', async () => {
     const html = await buildPostHTML();
     const relUrl = pval('postRelUrl');
     const filename = relUrl ? relUrl.split('/').pop() : (slugify(pval('metaTitle')) || 'post') + '.html';
-    downloadText(filename, html, 'text/html');
+
+    if(!FS_SUPPORTED){
+      downloadText(filename, html, 'text/html');
+    } else {
+      let handle = postHtmlHandle;
+      if(handle && !(await verifyPermission(handle))) handle = null;
+      if(!handle){
+        handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: 'HTML file', accept: { 'text/html': ['.html'] } }]
+        });
+        postHtmlHandle = handle;
+      }
+      await writeToHandle(handle, html);
+      updatePostSaveStatus();
+      note('saved ' + handle.name + ' · ' + new Date().toLocaleTimeString());
+    }
 
     const attachId = document.getElementById('attachList').value;
     if(attachId && lists[attachId]){
@@ -1455,11 +1926,11 @@ document.getElementById('exportPostBtn').addEventListener('click', async () => {
       });
       renumberRows(l);
       if(currentListId === attachId) renderRowTable();
-      alert('Post exported, and an entry was added to "' + l.label + '". Switch to the Lists tab and export its CSV to publish the update.');
+      alert('Post saved, and an entry was added to "' + l.label + '". Switch to the Lists tab and save its CSV to publish the update.');
     }
     scheduleSave();
   } catch(err){
-    alert('Export failed: ' + err.message);
+    if(err.name !== 'AbortError') alert('Save failed: ' + err.message);
   } finally {
     btnEl.textContent = original;
   }
@@ -1480,6 +1951,8 @@ if(draft && draft.lists && Object.keys(draft.lists).length){
 refreshListSelect();
 loadListIntoForm();
 refreshAttachListOptions();
+renderPostPreview();
+updatePostSaveStatus();
 
 if(draft && draft.postDraft){
   const m = draft.postDraft.meta || {};

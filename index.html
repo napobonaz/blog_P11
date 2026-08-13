@@ -3,383 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Project Index</title>
+<title>Lukis Blog</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --paper: #EEF0EA;
-    --paper-line: #C9CEC2;
-    --ink: #1E2A38;
-    --graphite: #5B6259;
-    --stamp: #B03A2E;
-    --brass: #8A6A3B;
-    --card: #F6F7F2;
-    --radius: 2px;
-  }
-
-  *{ box-sizing: border-box; }
-
-  html{ scroll-behavior: smooth; }
-
-  body{
-    margin: 0;
-    background:
-      linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0/100% 40px,
-      var(--paper);
-    background-attachment: fixed;
-    color: var(--ink);
-    font-family: 'IBM Plex Sans', sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  a{ color: inherit; }
-
-  .wrap{
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 56px 32px 96px;
-  }
-
-  /* ---------- Cover sheet / header ---------- */
-
-  .coversheet{
-    border: 1.5px solid var(--ink);
-    background: var(--card);
-    padding: 32px 32px 20px;
-    margin-bottom: 56px;
-  }
-
-  .coversheet .eyebrow{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    color: var(--stamp);
-    text-transform: uppercase;
-    margin: 0 0 10px;
-  }
-
-  .coversheet h1{
-    font-family: 'Oswald', sans-serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    font-size: clamp(30px, 5vw, 46px);
-    margin: 0 0 10px;
-    line-height: 1.05;
-  }
-
-  .coversheet .tagline{
-    font-size: 15px;
-    color: var(--graphite);
-    max-width: 46em;
-    margin: 0 0 24px;
-    line-height: 1.55;
-  }
-
-  .titleblock{
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0;
-    border-top: 1px solid var(--ink);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11.5px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--graphite);
-  }
-
-  .titleblock div{
-    padding: 10px 20px 0 0;
-    margin-right: 20px;
-  }
-
-  .titleblock span{
-    display: block;
-    color: var(--ink);
-    font-size: 13px;
-    margin-top: 2px;
-  }
-
-  /* ---------- Grid ---------- */
-
-  .grid{
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 28px;
-  }
-
-  .card{
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    background: var(--card);
-    border: 1.5px solid var(--ink);
-    text-decoration: none;
-    color: var(--ink);
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-  }
-
-  .card:hover, .card:focus-visible{
-    transform: translateY(-4px);
-    border-color: var(--stamp);
-    box-shadow: 6px 6px 0 rgba(30,42,56,0.08);
-  }
-
-  .card:focus-visible{
-    outline: 2px solid var(--stamp);
-    outline-offset: 3px;
-  }
-
-  /* registration crosshairs */
-  .card::before, .card::after,
-  .card .cross-tr, .card .cross-bl{
-    content: "";
-    position: absolute;
-    width: 11px;
-    height: 11px;
-    opacity: 0.35;
-    transition: opacity 0.18s ease;
-    background:
-      linear-gradient(var(--ink), var(--ink)) center/100% 1px no-repeat,
-      linear-gradient(90deg, var(--ink), var(--ink)) center/1px 100% no-repeat;
-  }
-  .card::before{ top: 8px; left: 8px; }
-  .card::after{ bottom: 8px; right: 8px; }
-  .card:hover::before, .card:hover::after{ opacity: 0.9; }
-
-  .thumb{
-    aspect-ratio: 16 / 10;
-    border-bottom: 1.5px solid var(--ink);
-    background: var(--paper);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .thumb img{
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .thumb .placeholder{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    width: 100%;
-    height: 100%;
-    color: var(--graphite);
-    font-family: 'IBM Plex Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 11px;
-    background:
-      repeating-linear-gradient(45deg, var(--paper-line) 0, var(--paper-line) 1px, transparent 1px, transparent 10px);
-  }
-
-  .dwg-no{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    color: var(--stamp);
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: var(--paper);
-    padding: 2px 6px;
-    border: 1px solid var(--ink);
-  }
-
-  .body{
-    padding: 18px 20px 16px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .body h2{
-    font-family: 'Oswald', sans-serif;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.01em;
-    font-size: 18px;
-    margin: 0 0 8px;
-    line-height: 1.25;
-  }
-
-  .body p{
-    font-size: 14px;
-    line-height: 1.55;
-    color: var(--graphite);
-    margin: 0;
-    flex: 1;
-  }
-
-  .footer-strip{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-top: 1px solid var(--paper-line);
-    margin-top: 16px;
-    padding-top: 12px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-
-  .tag{
-    border: 1px solid var(--brass);
-    color: var(--brass);
-    padding: 3px 7px;
-  }
-
-  .go{
-    color: var(--ink);
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .card:hover .go{ color: var(--stamp); }
-
-  footer.colophon{
-    margin-top: 64px;
-    padding-top: 20px;
-    border-top: 1px solid var(--paper-line);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--graphite);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  @media (prefers-reduced-motion: reduce){
-    .card{ transition: none; }
-  }
+  :root{ --paper:#EEF0EA; --paper-line:#C9CEC2; --ink:#1E2A38; --graphite:#5B6259; --stamp:#B03A2E; --brass:#8A6A3B; --card:#F6F7F2; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background: linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0/100% 40px, var(--paper); background-attachment:fixed; color:var(--ink); font-family:'IBM Plex Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+  a{ color:inherit; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:56px 32px 96px; }
+  .back-link{ margin:0 0 20px; font-family:'IBM Plex Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.06em; }
+  .back-link a{ text-decoration:none; }
+  .back-link a:hover{ color:var(--stamp); }
+  .coversheet{ border:1.5px solid var(--ink); background:var(--card); padding:32px 32px 20px; margin-bottom:56px; }
+  .coversheet .eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.14em; color:var(--stamp); text-transform:uppercase; margin:0 0 10px; }
+  .coversheet h1{ font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.02em; font-size:clamp(30px,5vw,46px); margin:0 0 10px; line-height:1.05; }
+  .coversheet .tagline{ font-size:15px; color:var(--graphite); max-width:46em; margin:0 0 24px; line-height:1.55; }
+  .titleblock{ display:flex; flex-wrap:wrap; border-top:1px solid var(--ink); font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--graphite); }
+  .titleblock div{ padding:10px 20px 0 0; margin-right:20px; }
+  .titleblock span{ display:block; color:var(--ink); font-size:13px; margin-top:2px; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:28px; }
+  .card{ position:relative; display:flex; flex-direction:column; background:var(--card); border:1.5px solid var(--ink); text-decoration:none; color:var(--ink); transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .card:hover{ transform:translateY(-4px); border-color:var(--stamp); box-shadow:6px 6px 0 rgba(30,42,56,0.08); }
+  .thumb{ aspect-ratio:16/10; border-bottom:1.5px solid var(--ink); background:var(--paper); position:relative; overflow:hidden; }
+  .thumb img{ width:100%; height:100%; object-fit:cover; }
+  .thumb .placeholder{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; width:100%; height:100%; color:var(--graphite); font-family:'IBM Plex Mono',monospace; text-transform:uppercase; letter-spacing:0.08em; font-size:11px; background: repeating-linear-gradient(45deg, var(--paper-line) 0, var(--paper-line) 1px, transparent 1px, transparent 10px); }
+  .dwg-no{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.06em; color:var(--stamp); position:absolute; top:10px; left:10px; background:var(--paper); padding:2px 6px; border:1px solid var(--ink); }
+  .body{ padding:18px 20px 16px; flex:1; display:flex; flex-direction:column; }
+  .body h2{ font-family:'Oswald',sans-serif; font-weight:600; text-transform:uppercase; font-size:18px; margin:0 0 8px; line-height:1.25; }
+  .body p{ font-size:14px; line-height:1.55; color:var(--graphite); margin:0; flex:1; }
+  .footer-strip{ display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--paper-line); margin-top:16px; padding-top:12px; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.05em; text-transform:uppercase; }
+  .tag{ border:1px solid var(--brass); color:var(--brass); padding:3px 7px; }
 </style>
 </head>
 <body>
-
 <div class="wrap">
-
+  
   <header class="coversheet">
-    <p class="eyebrow">Project Index — All Sheets</p>
-    <h1>Technical Project Index</h1>
-    <p class="tagline">Engineering builds, simulations, and archival research — logged as they're worked. Each entry links out to the full write-up.</p>
+    <p class="eyebrow">Root index</p>
+    <h1>Lukis Blog</h1>
+    <p class="tagline">The shit I do. </p>
     <div class="titleblock">
       <div>Sheets<span id="sheet-count">—</span></div>
-      <div>Rev<span>A</span></div>
-      <div>Updated<span id="sheet-date">—</span></div>
       <div>Source<span>projects.csv</span></div>
     </div>
   </header>
-
   <main class="grid" id="grid" aria-live="polite"></main>
-
-  <footer class="colophon">Index generated from projects.csv — edit that file to add, remove, or reorder entries.</footer>
-
 </div>
-
 <script>
-/* ---------- minimal CSV parser (handles quoted fields) ---------- */
 function parseCSV(text){
-  const rows = [];
-  let row = [], field = '', inQuotes = false;
-  for(let i = 0; i < text.length; i++){
-    const c = text[i], next = text[i+1];
-    if(inQuotes){
-      if(c === '"' && next === '"'){ field += '"'; i++; }
-      else if(c === '"'){ inQuotes = false; }
-      else { field += c; }
-    } else {
-      if(c === '"'){ inQuotes = true; }
-      else if(c === ','){ row.push(field); field = ''; }
-      else if(c === '\n' || c === '\r'){
-        if(c === '\r' && next === '\n') i++;
-        row.push(field); field = '';
-        if(row.some(v => v.trim() !== '')) rows.push(row);
-        row = [];
-      } else { field += c; }
-    }
+  const rows = []; let row = [], field = '', inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i], next=text[i+1];
+    if(inQuotes){ if(c==='"'&&next==='"'){field+='"';i++;} else if(c==='"'){inQuotes=false;} else {field+=c;} }
+    else { if(c==='"'){inQuotes=true;} else if(c===','){row.push(field);field='';}
+      else if(c==='\n'||c==='\r'){ if(c==='\r'&&next==='\n')i++; row.push(field); field='';
+        if(row.some(v=>v.trim()!=='')) rows.push(row); row=[]; }
+      else { field+=c; } }
   }
-  if(field.length || row.length){ row.push(field); rows.push(row); }
-  const header = rows.shift().map(h => h.trim());
-  return rows.map(r => Object.fromEntries(header.map((h, idx) => [h, (r[idx] || '').trim()])));
+  if(field.length||row.length){row.push(field);rows.push(row);}
+  const header = rows.shift().map(h=>h.trim());
+  return rows.map(r=>Object.fromEntries(header.map((h,idx)=>[h,(r[idx]||'').trim()])));
 }
-
 async function init(){
   const grid = document.getElementById('grid');
   try{
     const res = await fetch('projects.csv');
-    if(!res.ok) throw new Error('csv fetch failed: ' + res.status);
+    if(!res.ok) throw new Error('csv fetch failed: '+res.status);
     const rows = parseCSV(await res.text());
-
-    document.getElementById('sheet-count').textContent = String(rows.length).padStart(2, '0');
-    document.getElementById('sheet-date').textContent = new Date().toISOString().slice(0,10);
-
-    rows.forEach((p, i) => {
+    document.getElementById('sheet-count').textContent = String(rows.length).padStart(2,'0');
+    rows.forEach((p,i)=>{
       const card = document.createElement('a');
       card.className = 'card';
       card.href = p.url || '#';
-
-      card.innerHTML = `
-        <div class="thumb">
-          <span class="dwg-no">DWG–${p.id || String(i+1).padStart(2,'0')}</span>
-        </div>
-        <div class="body">
-          <h2>${p.title}</h2>
-          <p>${p.description}</p>
-          <div class="footer-strip">
-            <span class="tag">${p.tag || 'Project'}</span>
-            <span class="go">${p.date || ''} · View →</span>
-          </div>
-        </div>
-      `;
-
+      const placeholder = '<div class="placeholder"><span>No preview yet</span><span>DWG–'+(p.id||String(i+1).padStart(2,'0'))+'</span></div>';
+      card.innerHTML = '<div class="thumb"><span class="dwg-no">DWG–'+(p.id||String(i+1).padStart(2,'0'))+'</span></div>'
+        + '<div class="body"><h2>'+p.title+'</h2><p>'+p.description+'</p>'
+        + '<div class="footer-strip"><span class="tag">'+(p.tag||'Project')+'</span><span>'+(p.date||'')+' · View →</span></div></div>';
       const thumb = card.querySelector('.thumb');
-      const dwgLabel = p.id || String(i+1).padStart(2,'0');
-
-      function showPlaceholder(){
-        const div = document.createElement('div');
-        div.className = 'placeholder';
-        const a = document.createElement('span');
-        a.textContent = 'No preview yet';
-        const b = document.createElement('span');
-        b.textContent = 'DWG–' + dwgLabel;
-        div.append(a, b);
-        thumb.appendChild(div);
-      }
-
       if(p.image){
         const img = document.createElement('img');
-        img.src = p.image;
-        img.alt = '';
-        img.loading = 'lazy';
-        img.addEventListener('error', () => { img.remove(); showPlaceholder(); }, { once: true });
+        img.src = p.image; img.alt = ''; img.loading = 'lazy';
+        img.addEventListener('error', () => { img.remove(); thumb.insertAdjacentHTML('beforeend', placeholder); }, { once:true });
         thumb.appendChild(img);
       } else {
-        showPlaceholder();
+        thumb.insertAdjacentHTML('beforeend', placeholder);
       }
-
       grid.appendChild(card);
     });
   } catch(err){
-    grid.innerHTML = `<p style="font-family:'IBM Plex Mono',monospace;color:var(--stamp);">
-      Could not load projects.csv (${err.message}). If you're opening this file
-      directly from disk, browsers block local CSV loading — serve the folder
-      over HTTP instead (e.g. <code>python3 -m http.server</code>) or upload
-      both files to your blog's host.</p>`;
+    grid.innerHTML = '<p style="font-family:\'IBM Plex Mono\',monospace;color:#B03A2E;">Could not load projects.csv ('+err.message+'). Serve this folder over HTTP instead of opening the file directly.</p>';
   }
 }
 init();
 </script>
-
 </body>
 </html>

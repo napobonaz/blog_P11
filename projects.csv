@@ -5,4 +5,5 @@ id,title,description,url,image,category,tag,date
 04,Unity,Games I made,subcat/unity.html,,Programming,Unity,2026
 05,Model Kit,Model kits I made,subcat/kits.html,,Model Kit,CAD,2026
 06,Artstation,High quality renders,subcat/artstation.html,,Aviation,History,2026
-07,DCS,My lovely F-18C lot-20,subcat/DCS.html,,Simulation,DCS,2026
+07,DCS,My lovely F-18C lot-20,subcat/DCS.html,d,Simulation,DCS,2026
+08,Katze,,,images/1.jpg,,,2026-08-13
