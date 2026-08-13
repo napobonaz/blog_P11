@@ -1,136 +1,370 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog Template: [Insert Title Here]</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono&display=swap');
-        
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; scroll-behavior: smooth; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        
-        /* HEADER PROTECTION: Stacked Title and Nav */
-        header { position: sticky; top: 0; z-index: 100; background: white; border-bottom: 2px solid #e2e8f0; }
-        .title-layer { padding: 1.25rem 0; background: white; }
-        .nav-layer { background: #1e293b; padding: 0.6rem 0; }
-        
-        .section-anchor { scroll-margin-top: 160px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3rem; margin-bottom: 3rem; }
-        .image-card { border: 1px solid #e2e8f0; background: #fff; border-radius: 4px; overflow: hidden; margin: 2rem 0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        .caption { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; text-transform: uppercase; padding: 0.8rem; color: #64748b; background: #f8fafc; border-top: 1px solid #e2e8f0; }
-        
-        .content-text { font-size: 1.05rem; line-height: 1.8; color: #334155; margin-bottom: 1.5rem; text-align: justify; }
-        
-        /* Specialized blocks */
-        .tech-card { background: #1e293b; color: #f1f5f9; padding: 2rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin: 2.5rem 0; }
-        .alert-box { border-left: 6px solid #b91c1c; background: #fef2f2; padding: 2rem; color: #7f1d1d; margin: 3rem 0; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #EEF0EA;
+    --paper-line: #C9CEC2;
+    --ink: #1E2A38;
+    --graphite: #5B6259;
+    --stamp: #B03A2E;
+    --brass: #8A6A3B;
+    --card: #F6F7F2;
+    --radius: 2px;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html{ scroll-behavior: smooth; }
+
+  body{
+    margin: 0;
+    background:
+      linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0/100% 40px,
+      var(--paper);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a{ color: inherit; }
+
+  .wrap{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+  }
+
+  /* ---------- Cover sheet / header ---------- */
+
+  .coversheet{
+    border: 1.5px solid var(--ink);
+    background: var(--card);
+    padding: 32px 32px 20px;
+    margin-bottom: 56px;
+  }
+
+  .coversheet .eyebrow{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    color: var(--stamp);
+    text-transform: uppercase;
+    margin: 0 0 10px;
+  }
+
+  .coversheet h1{
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-size: clamp(30px, 5vw, 46px);
+    margin: 0 0 10px;
+    line-height: 1.05;
+  }
+
+  .coversheet .tagline{
+    font-size: 15px;
+    color: var(--graphite);
+    max-width: 46em;
+    margin: 0 0 24px;
+    line-height: 1.55;
+  }
+
+  .titleblock{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border-top: 1px solid var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--graphite);
+  }
+
+  .titleblock div{
+    padding: 10px 20px 0 0;
+    margin-right: 20px;
+  }
+
+  .titleblock span{
+    display: block;
+    color: var(--ink);
+    font-size: 13px;
+    margin-top: 2px;
+  }
+
+  /* ---------- Grid ---------- */
+
+  .grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 28px;
+  }
+
+  .card{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--card);
+    border: 1.5px solid var(--ink);
+    text-decoration: none;
+    color: var(--ink);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+
+  .card:hover, .card:focus-visible{
+    transform: translateY(-4px);
+    border-color: var(--stamp);
+    box-shadow: 6px 6px 0 rgba(30,42,56,0.08);
+  }
+
+  .card:focus-visible{
+    outline: 2px solid var(--stamp);
+    outline-offset: 3px;
+  }
+
+  /* registration crosshairs */
+  .card::before, .card::after,
+  .card .cross-tr, .card .cross-bl{
+    content: "";
+    position: absolute;
+    width: 11px;
+    height: 11px;
+    opacity: 0.35;
+    transition: opacity 0.18s ease;
+    background:
+      linear-gradient(var(--ink), var(--ink)) center/100% 1px no-repeat,
+      linear-gradient(90deg, var(--ink), var(--ink)) center/1px 100% no-repeat;
+  }
+  .card::before{ top: 8px; left: 8px; }
+  .card::after{ bottom: 8px; right: 8px; }
+  .card:hover::before, .card:hover::after{ opacity: 0.9; }
+
+  .thumb{
+    aspect-ratio: 16 / 10;
+    border-bottom: 1.5px solid var(--ink);
+    background: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .thumb img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .thumb svg{
+    width: 58%;
+    height: 58%;
+    stroke: var(--ink);
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.82;
+  }
+
+  .dwg-no{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--stamp);
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: var(--paper);
+    padding: 2px 6px;
+    border: 1px solid var(--ink);
+  }
+
+  .body{
+    padding: 18px 20px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .body h2{
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    font-size: 18px;
+    margin: 0 0 8px;
+    line-height: 1.25;
+  }
+
+  .body p{
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--graphite);
+    margin: 0;
+    flex: 1;
+  }
+
+  .footer-strip{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--paper-line);
+    margin-top: 16px;
+    padding-top: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .tag{
+    border: 1px solid var(--brass);
+    color: var(--brass);
+    padding: 3px 7px;
+  }
+
+  .go{
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .card:hover .go{ color: var(--stamp); }
+
+  footer.colophon{
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 1px solid var(--paper-line);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--graphite);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .card{ transition: none; }
+  }
+</style>
 </head>
 <body>
 
-    <header>
-        <div class="title-layer">
-            <div class="container mx-auto px-6">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                    <div>
-                        <span class="text-[10px] font-black bg-slate-900 text-white px-2 py-1 rounded uppercase tracking-widest mb-1 inline-block">[CATEGORY / ARCHIVE]</span>
-                        <h1 class="text-xl md:text-2xl font-black uppercase tracking-tight">[BLOG POST MAIN TITLE]</h1>
-                    </div>
-                    <p class="text-[10px] font-mono text-slate-400 uppercase">[DOCUMENT REF OR DATE]</p>
-                </div>
-            </div>
+<div class="wrap">
+
+  <header class="coversheet">
+    <p class="eyebrow">Project Index — All Sheets</p>
+    <h1>Technical Project Index</h1>
+    <p class="tagline">Engineering builds, simulations, and archival research — logged as they're worked. Each entry links out to the full write-up.</p>
+    <div class="titleblock">
+      <div>Sheets<span id="sheet-count">—</span></div>
+      <div>Rev<span>A</span></div>
+      <div>Updated<span id="sheet-date">—</span></div>
+      <div>Source<span>projects.csv</span></div>
+    </div>
+  </header>
+
+  <main class="grid" id="grid" aria-live="polite"></main>
+
+  <footer class="colophon">Index generated from projects.csv — edit that file to add, remove, or reorder entries.</footer>
+
+</div>
+
+<script>
+/* ---------- minimal CSV parser (handles quoted fields) ---------- */
+function parseCSV(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for(let i = 0; i < text.length; i++){
+    const c = text[i], next = text[i+1];
+    if(inQuotes){
+      if(c === '"' && next === '"'){ field += '"'; i++; }
+      else if(c === '"'){ inQuotes = false; }
+      else { field += c; }
+    } else {
+      if(c === '"'){ inQuotes = true; }
+      else if(c === ','){ row.push(field); field = ''; }
+      else if(c === '\n' || c === '\r'){
+        if(c === '\r' && next === '\n') i++;
+        row.push(field); field = '';
+        if(row.some(v => v.trim() !== '')) rows.push(row);
+        row = [];
+      } else { field += c; }
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  const header = rows.shift().map(h => h.trim());
+  return rows.map(r => Object.fromEntries(header.map((h, idx) => [h, (r[idx] || '').trim()])));
+}
+
+/* ---------- line-art placeholder icons, keyed by category ---------- */
+const ICONS = {
+  uav: `<svg viewBox="0 0 100 100"><line x1="20" y1="60" x2="80" y2="60"/><circle cx="20" cy="60" r="4"/><circle cx="80" cy="60" r="4"/><line x1="30" y1="60" x2="20" y2="30"/><line x1="70" y1="60" x2="80" y2="30"/><circle cx="20" cy="30" r="10"/><circle cx="80" cy="30" r="10"/><line x1="45" y1="60" x2="50" y2="75"/><line x1="55" y1="60" x2="50" y2="75"/></svg>`,
+  lbm: `<svg viewBox="0 0 100 100"><path d="M15 50 C 35 40, 55 40, 90 46 C 60 52, 35 55, 15 50 Z"/><path d="M10 30 H 90" stroke-dasharray="2 6"/><path d="M10 70 H 90" stroke-dasharray="2 6"/><path d="M10 20 H 90" stroke-dasharray="2 6" opacity="0.5"/></svg>`,
+  edm: `<svg viewBox="0 0 100 100"><path d="M50 15 L85 32 V68 L50 85 L15 68 V32 Z"/><path d="M15 32 L50 49 L85 32"/><line x1="50" y1="49" x2="50" y2="85"/></svg>`,
+  plotter: `<svg viewBox="0 0 100 100"><path d="M20 80 C 20 50, 40 50, 40 30 C 40 15, 60 15, 60 30 C 60 55, 85 55, 85 25"/><path d="M85 25 l-8 -3 M85 25 l-3 -8"/><circle cx="20" cy="80" r="3"/></svg>`,
+  fea: `<svg viewBox="0 0 100 100"><rect x="10" y="35" width="35" height="18"/><rect x="55" y="47" width="35" height="18"/><circle cx="47" cy="53" r="6"/></svg>`,
+  aviation: `<svg viewBox="0 0 100 100"><path d="M10 55 H90 M50 55 L38 40 H62 L50 55"/><path d="M50 40 V25"/><path d="M35 62 L20 72 M65 62 L80 72"/><path d="M45 55 L45 65 L55 65 L55 55"/></svg>`,
+  default: `<svg viewBox="0 0 100 100"><rect x="20" y="20" width="60" height="60"/><line x1="20" y1="40" x2="80" y2="40"/><line x1="35" y1="20" x2="35" y2="80"/></svg>`
+};
+
+async function init(){
+  const grid = document.getElementById('grid');
+  try{
+    const res = await fetch('projects.csv');
+    if(!res.ok) throw new Error('csv fetch failed: ' + res.status);
+    const rows = parseCSV(await res.text());
+
+    document.getElementById('sheet-count').textContent = String(rows.length).padStart(2, '0');
+    document.getElementById('sheet-date').textContent = new Date().toISOString().slice(0,10);
+
+    rows.forEach((p, i) => {
+      const card = document.createElement('a');
+      card.className = 'card';
+      card.href = p.url || '#';
+
+      const icon = ICONS[p.category] || ICONS.default;
+      const thumbInner = p.image
+        ? `<img src="${p.image}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{innerHTML:\`${icon}\`}).firstChild)">`
+        : icon;
+
+      card.innerHTML = `
+        <div class="thumb">
+          <span class="dwg-no">DWG–${p.id || String(i+1).padStart(2,'0')}</span>
+          ${thumbInner}
         </div>
-        <nav class="nav-layer">
-            <div class="container mx-auto px-6">
-                <ul class="flex flex-wrap gap-x-8 gap-y-2 text-[10px] font-black uppercase tracking-widest text-slate-300">
-                    <li><a href="#intro" class="hover:text-white transition">01 Introduction</a></li>
-                    <li><a href="#technical" class="hover:text-white transition">02 Technical Data</a></li>
-                    <li><a href="#analysis" class="hover:text-white transition">03 Analysis</a></li>
-                    <li><a href="#conclusion" class="hover:text-white transition">04 Summary</a></li>
-                </ul>
-            </div>
-        </nav>
-    </header>
-
-    <main class="container mx-auto px-6 py-12 max-w-5xl">
-
-        <section id="intro" class="section-anchor">
-            <h2 class="text-4xl md:text-6xl font-black text-slate-900 leading-none uppercase mb-8">[Primary Subject Subheadline]</h2>
-            <div class="content-text">
-                This is where you place your opening hook. Describe the context, the timeframe, and the strategic importance of the subject matter. Use the <code>content-text</code> class for all standard paragraphs.
-            </div>
-            
-            <div class="image-card">
-                <img src="[LINK TO MAIN IMAGE]" class="w-full h-auto" alt="Subject Description">
-                <div class="caption">Figure 01: [Provide a technical or descriptive caption here]</div>
-            </div>
-        </section>
-
-        <section id="technical" class="section-anchor">
-            <h3 class="text-3xl font-black uppercase mb-8 border-l-8 border-slate-900 pl-6">Technical Specifications</h3>
-            
-            <div class="content-text">
-                Introduce the technical parameters of your subject. Below is a 'Tech Card' which is perfect for listing data, chemical compositions, or engineering specs.
-            </div>
-
-            <div class="tech-card">
-                <h4 class="text-slate-400 font-black mb-4 uppercase tracking-widest text-xs">Primary Parameters:</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-700 pt-4">
-                    <div>[Spec Name]: <span class="text-white">[Value]</span></div>
-                    <div>[Spec Name]: <span class="text-white">[Value]</span></div>
-                    <div>[Spec Name]: <span class="text-white">[Value]</span></div>
-                    <div>[Spec Name]: <span class="text-white">[Value]</span></div>
-                </div>
-            </div>
-        </section>
-
-        <section id="analysis" class="section-anchor">
-            <h3 class="text-3xl font-black uppercase mb-8 border-l-8 border-slate-900 pl-6">Industrial & Socio-Political Context</h3>
-            
-            <div class="content-text">
-                Use this area for deeper analysis. If you need to highlight sensitive information, warnings, or historical atrocities, use the <code>alert-box</code> provided below.
-            </div>
-
-            <div class="alert-box">
-                <p class="font-bold mb-2 uppercase text-xs">Critical Assessment:</p>
-                <div class="text-sm">
-                    Place sensitive or high-impact historical/social context here. The red border and light red background distinguish this from the standard technical analysis.
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-8">
-                <img src="[IMG 1]" class="w-full h-48 object-cover rounded shadow">
-                <img src="[IMG 2]" class="w-full h-48 object-cover rounded shadow">
-                <img src="[IMG 3]" class="w-full h-48 object-cover rounded shadow">
-            </div>
-        </section>
-
-        <section id="conclusion" class="section-anchor border-none">
-            <h3 class="text-3xl font-black uppercase mb-8">Summary of Findings</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm leading-relaxed">
-                <div class="bg-white p-6 rounded border border-slate-200 shadow-sm">
-                    <h4 class="font-black uppercase mb-2">Technical Legacy</h4>
-                    <p class="text-slate-600">Summarize the technological impact and how it influenced future developments.</p>
-                </div>
-                <div class="bg-white p-6 rounded border border-slate-200 shadow-sm">
-                    <h4 class="font-black uppercase mb-2">Final Conclusion</h4>
-                    <p class="text-slate-600">Provide the final verdict on the effectiveness and historical relevance of the subject.</p>
-                </div>
-            </div>
-        </section>
-
-        <div class="bg-slate-900 text-white p-12 rounded-xl text-center shadow-2xl mt-12">
-            <h3 class="text-2xl font-black uppercase mb-4">Explore the Full-Scale Replica</h3>
-            <p class="text-slate-400 mb-8 max-w-lg mx-auto">Link your blog post directly to your shop product to drive conversions.</p>
-            <a href="[YOUR SHOP LINK]" class="inline-block bg-white text-slate-900 font-black uppercase tracking-widest text-xs px-10 py-4 rounded-full hover:bg-slate-200 transition">View in Shop</a>
+        <div class="body">
+          <h2>${p.title}</h2>
+          <p>${p.description}</p>
+          <div class="footer-strip">
+            <span class="tag">${p.tag || 'Project'}</span>
+            <span class="go">${p.date || ''} · View →</span>
+          </div>
         </div>
-
-    </main>
-
-    <footer class="bg-slate-100 py-12 text-center border-t border-slate-200">
-        <p class="text-[10px] font-mono text-slate-400 uppercase tracking-widest">[COPYRIGHT AND TRADEMARK INFO]</p>
-    </footer>
+      `;
+      grid.appendChild(card);
+    });
+  } catch(err){
+    grid.innerHTML = `<p style="font-family:'IBM Plex Mono',monospace;color:var(--stamp);">
+      Could not load projects.csv (${err.message}). If you're opening this file
+      directly from disk, browsers block local CSV loading — serve the folder
+      over HTTP instead (e.g. <code>python3 -m http.server</code>) or upload
+      both files to your blog's host.</p>`;
+  }
+}
+init();
+</script>
 
 </body>
 </html>
