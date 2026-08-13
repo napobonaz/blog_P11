@@ -284,11 +284,8 @@
       <legend>Choose a list</legend>
       <div class="list-picker">
         <select id="listSelect"></select>
-        <button class="btn" id="newListBtn">+ New list</button>
-        <button class="btn" id="dupListBtn">Duplicate</button>
-        <button class="btn" id="deleteListBtn">Delete</button>
       </div>
-      <p class="hint">A "list" is one index-style page (root or a subcategory) and the CSV that feeds it. The root index and each subcategory page (e.g. F1, F-18) are each their own list.</p>
+      <p class="hint">A "list" is one index-style page (root or a subcategory) and the CSV that feeds it. New subcategory lists are created automatically the first time you use a category's "Posts" button.</p>
     </fieldset>
 
     <fieldset>
@@ -641,40 +638,6 @@ document.getElementById('listSelect').addEventListener('change', (e) => {
   loadListIntoForm();
 });
 
-document.getElementById('newListBtn').addEventListener('click', () => {
-  const id = newListId();
-  lists[id] = defaultList('New list');
-  currentListId = id;
-  refreshListSelect();
-  loadListIntoForm();
-  scheduleSave();
-});
-
-document.getElementById('dupListBtn').addEventListener('click', () => {
-  const src = lists[currentListId];
-  if(!src) return;
-  const id = newListId();
-  lists[id] = JSON.parse(JSON.stringify(src));
-  lists[id].label = src.label + ' copy';
-  lists[id].isRoot = false;
-  currentListId = id;
-  refreshListSelect();
-  loadListIntoForm();
-  scheduleSave();
-});
-
-document.getElementById('deleteListBtn').addEventListener('click', () => {
-  if(Object.keys(lists).length <= 1){ alert('At least one list must remain.'); return; }
-  if(!confirm('Delete "' + lists[currentListId].label + '"? This only affects the draft — any files already saved to disk are unaffected.')) return;
-  csvHandles.delete(currentListId);
-  pageHandles.delete(currentListId);
-  delete lists[currentListId];
-  currentListId = Object.keys(lists)[0];
-  refreshListSelect();
-  loadListIntoForm();
-  scheduleSave();
-});
-
 /* ---------- Row cards (visual, draggable) ---------- */
 
 function isPreviewableImage(url){
@@ -715,13 +678,17 @@ function renderRowTable(){
     handle.addEventListener('mousedown', () => { card.draggable = true; });
     handle.addEventListener('mouseup', () => { card.draggable = false; });
     thumb.append(dwg, handle);
-    if(isPreviewableImage(row.image)){
-      const img = document.createElement('img');
-      img.src = row.image; img.alt = '';
-      img.addEventListener('error', () => { img.remove(); addPlaceholder(); }, { once: true });
-      thumb.appendChild(img);
-    } else {
-      addPlaceholder();
+
+    function refreshThumb(){
+      thumb.querySelectorAll('img, .placeholder').forEach(el => el.remove());
+      if(isPreviewableImage(row.image)){
+        const img = document.createElement('img');
+        img.src = row.image; img.alt = '';
+        img.addEventListener('error', () => { img.remove(); addPlaceholder(); }, { once: true });
+        thumb.appendChild(img);
+      } else {
+        addPlaceholder();
+      }
     }
     function addPlaceholder(){
       const ph = document.createElement('div');
@@ -729,15 +696,35 @@ function renderRowTable(){
       ph.textContent = row.image ? 'Preview not shown\n(local path)' : 'No preview yet';
       thumb.appendChild(ph);
     }
+    refreshThumb();
 
     const body = document.createElement('div');
     body.className = 'card-body2';
+
+    let urlInputEl = null;    // assigned below once the URL meta field is built; referenced by the title listener
+    let imageInputEl = null;  // assigned below once the Image meta field is built; referenced by the title listener
+
+    if(row._urlAuto === undefined) row._urlAuto = !row.url;
+    if(row._imageAuto === undefined) row._imageAuto = !row.image;
 
     const title = document.createElement('input');
     title.type = 'text'; title.className = 'title-input';
     title.placeholder = 'Title';
     title.value = row.title || '';
-    title.addEventListener('input', () => { row.title = title.value; scheduleSave(); });
+    title.addEventListener('input', () => {
+      row.title = title.value;
+      const slug = slugify(row.title);
+      if(row._urlAuto){
+        row.url = row.title.trim() ? ((l.isRoot ? 'subcat/' : 'posts/') + slug + '.html') : '';
+        if(urlInputEl) urlInputEl.value = row.url;
+      }
+      if(row._imageAuto){
+        row.image = row.title.trim() ? ('images/' + slug + '.jpg') : '';
+        if(imageInputEl) imageInputEl.value = row.image;
+        refreshThumb();
+      }
+      scheduleSave();
+    });
 
     const desc = document.createElement('textarea');
     desc.className = 'desc-input'; desc.rows = 2;
@@ -757,13 +744,23 @@ function renderRowTable(){
       const lab = document.createElement('label'); lab.textContent = labelText;
       const inp = document.createElement('input');
       inp.type = 'text'; inp.value = row[col] || ''; inp.placeholder = placeholder || '';
-      inp.addEventListener('input', () => { row[col] = inp.value; if(col==='image') renderRowTable(); scheduleSave(); });
+      inp.addEventListener('input', () => {
+        row[col] = inp.value;
+        if(col === 'url') row._urlAuto = false;      // manual edit takes over from here
+        if(col === 'image'){ row._imageAuto = false; refreshThumb(); }
+        scheduleSave();
+      });
       w.append(lab, inp);
+      w._input = inp;
       return w;
     }
 
+    const urlFieldWrap = metaInput('URL', 'url', 'posts/example.html');
+    urlInputEl = urlFieldWrap._input;
+    const imageFieldWrap = metaInput('Image', 'image', 'images/thumb.jpg');
+    imageInputEl = imageFieldWrap._input;
     const row1 = document.createElement('div'); row1.className = 'mrow';
-    row1.append(metaInput('URL', 'url', 'posts/example.html'), metaInput('Image', 'image', 'images/thumb.jpg'));
+    row1.append(urlFieldWrap, imageFieldWrap);
     const row2 = document.createElement('div'); row2.className = 'mrow';
     row2.append(metaInput('Category', 'category'), metaInput('Tag', 'tag'));
     const row3 = document.createElement('div'); row3.className = 'mrow';
@@ -776,7 +773,21 @@ function renderRowTable(){
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button'; removeBtn.className = 'remove-entry';
     removeBtn.textContent = '✕ remove entry';
-    removeBtn.addEventListener('click', () => { l.rows.splice(i,1); renumberRows(l); renderRowTable(); scheduleSave(); });
+    removeBtn.addEventListener('click', () => {
+      if(l.isRoot){
+        const match = findLinkedListForRow(row);
+        if(match){
+          const [linkedId, linkedList] = match;
+          if(!confirm('Delete category "' + (row.title || 'Untitled') + '"? This also removes its linked subcategory list "' + linkedList.label + '" from this tool (any files already saved to disk are not deleted). Continue?')) return;
+          csvHandles.delete(linkedId);
+          pageHandles.delete(linkedId);
+          delete lists[linkedId];
+          if(currentListId === linkedId) currentListId = Object.keys(lists)[0];
+          refreshListSelect();
+        }
+      }
+      l.rows.splice(i,1); renumberRows(l); renderRowTable(); scheduleSave();
+    });
 
     const entryActions = document.createElement('div');
     entryActions.className = 'entry-actions';
