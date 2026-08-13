@@ -1,6 +1,6 @@
 id,title,description,url,image,category,tag,date
 01,Post 1 Test,"Powertrain architecture and sizing for a 1,000 kg diesel-electric VTOL aircraft — turboshaft generator, 800V bus, eight motor drive.",posts/post1.html,,uav,Aerospace,2026
-02,Fuck you,A Python D2Q9 fluid solver built from scratch to compute drag and lift around arbitrary airfoil geometry.,posts/lbm-solver.html,,lbm,Simulation,2026
+02,Fuck you,A Python D2Q9 fluid solver built from scratch to compute drag and lift around arbitrary airfoil geometry.,posts/me-155-blender-model.html,,lbm,Simulation,2026
 03,DCS World EDM Blender Importer,Reverse-engineering a proprietary 3D format and building the Blender extension that reads it.,posts/edm-importer.html,,edm,Tooling,2026
 04,Pen Plotter Path Toolchain,"A three-stage SVG pipeline that merges, sorts, and simulates pen plotter drawings before they touch paper.",posts/plotter-toolchain.html,,plotter,Tooling,2026
 05,Hinge Joint FEA in CalculiX,Modeling a rotating hinge between two flexible arms — where standard multi-point constraints break down.,posts/hinge-fea.html,,fea,Simulation,2026
