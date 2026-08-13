@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1</title>
+<title>Cat 1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -41,12 +41,12 @@
 <div class="wrap">
   <p class="back-link"><a href="../index.html">← All categories</a></p>
   <header class="coversheet">
-    <p class="eyebrow">F1</p>
-    <h1>F1</h1>
+    <p class="eyebrow">Cat 1</p>
+    <h1>Cat 1</h1>
     
     <div class="titleblock">
       <div>Sheets<span id="sheet-count">—</span></div>
-      <div>Source<span>f1-projects.csv</span></div>
+      <div>Source<span>cat-1-projects.csv</span></div>
     </div>
   </header>
   <main class="grid" id="grid" aria-live="polite"></main>
@@ -69,7 +69,7 @@ function parseCSV(text){
 async function init(){
   const grid = document.getElementById('grid');
   try{
-    const res = await fetch('f1-projects.csv');
+    const res = await fetch('cat-1-projects.csv');
     if(!res.ok) throw new Error('csv fetch failed: '+res.status);
     const rows = parseCSV(await res.text());
     document.getElementById('sheet-count').textContent = String(rows.length).padStart(2,'0');
@@ -93,7 +93,7 @@ async function init(){
       grid.appendChild(card);
     });
   } catch(err){
-    grid.innerHTML = '<p style="font-family:\'IBM Plex Mono\',monospace;color:#B03A2E;">Could not load f1-projects.csv ('+err.message+'). Serve this folder over HTTP instead of opening the file directly.</p>';
+    grid.innerHTML = '<p style="font-family:\'IBM Plex Mono\',monospace;color:#B03A2E;">Could not load cat-1-projects.csv ('+err.message+'). Serve this folder over HTTP instead of opening the file directly.</p>';
   }
 }
 init();
