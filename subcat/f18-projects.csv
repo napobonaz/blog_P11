@@ -1,7 +1,0 @@
-id,title,description,url,image,category,tag,date
-01,Stick,"Powertrain architecture and sizing for a 1,000 kg diesel-electric VTOL aircraft — turboshaft generator, 800V bus, eight motor drive.",posts/vtol-uav.html,,uav,Aerospace,2026
-02,Shaker,A Python D2Q9 fluid solver built from scratch to compute drag and lift around arbitrary airfoil geometry.,posts/lbm-solver.html,,lbm,Simulation,2026
-03,Belt tensioner,Reverse-engineering a proprietary 3D format and building the Blender extension that reads it.,posts/edm-importer.html,,edm,Tooling,2026
-04,Throttle,"A three-stage SVG pipeline that merges, sorts, and simulates pen plotter drawings before they touch paper.",posts/plotter-toolchain.html,,plotter,Tooling,2026
-05,Cockpit Rig,Modeling a rotating hinge between two flexible arms — where standard multi-point constraints break down.,posts/hinge-fea.html,,fea,Simulation,2026
-06,CAD,An archival deep dive into the prototype registry and engine variants behind one of WWII Germany's most ambitious bomber programs.,posts/ju288.html,,aviation,History,2026
