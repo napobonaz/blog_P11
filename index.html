@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Template: [Insert Title Here]</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; scroll-behavior: smooth; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* HEADER PROTECTION: Stacked Title and Nav */
+        header { position: sticky; top: 0; z-index: 100; background: white; border-bottom: 2px solid #e2e8f0; }
+        .title-layer { padding: 1.25rem 0; background: white; }
+        .nav-layer { background: #1e293b; padding: 0.6rem 0; }
+        
+        .section-anchor { scroll-margin-top: 160px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3rem; margin-bottom: 3rem; }
+        .image-card { border: 1px solid #e2e8f0; background: #fff; border-radius: 4px; overflow: hidden; margin: 2rem 0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .caption { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; text-transform: uppercase; padding: 0.8rem; color: #64748b; background: #f8fafc; border-top: 1px solid #e2e8f0; }
+        
+        .content-text { font-size: 1.05rem; line-height: 1.8; color: #334155; margin-bottom: 1.5rem; text-align: justify; }
+        
+        /* Specialized blocks */
+        .tech-card { background: #1e293b; color: #f1f5f9; padding: 2rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin: 2.5rem 0; }
+        .alert-box { border-left: 6px solid #b91c1c; background: #fef2f2; padding: 2rem; color: #7f1d1d; margin: 3rem 0; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title-layer">
+            <div class="container mx-auto px-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                    <div>
+                        <span class="text-[10px] font-black bg-slate-900 text-white px-2 py-1 rounded uppercase tracking-widest mb-1 inline-block">[CATEGORY / ARCHIVE]</span>
+                        <h1 class="text-xl md:text-2xl font-black uppercase tracking-tight">[BLOG POST MAIN TITLE]</h1>
+                    </div>
+                    <p class="text-[10px] font-mono text-slate-400 uppercase">[DOCUMENT REF OR DATE]</p>
+                </div>
+            </div>
+        </div>
+        <nav class="nav-layer">
+            <div class="container mx-auto px-6">
+                <ul class="flex flex-wrap gap-x-8 gap-y-2 text-[10px] font-black uppercase tracking-widest text-slate-300">
+                    <li><a href="#intro" class="hover:text-white transition">01 Introduction</a></li>
+                    <li><a href="#technical" class="hover:text-white transition">02 Technical Data</a></li>
+                    <li><a href="#analysis" class="hover:text-white transition">03 Analysis</a></li>
+                    <li><a href="#conclusion" class="hover:text-white transition">04 Summary</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12 max-w-5xl">
+
+        <section id="intro" class="section-anchor">
+            <h2 class="text-4xl md:text-6xl font-black text-slate-900 leading-none uppercase mb-8">[Primary Subject Subheadline]</h2>
+            <div class="content-text">
+                This is where you place your opening hook. Describe the context, the timeframe, and the strategic importance of the subject matter. Use the <code>content-text</code> class for all standard paragraphs.
+            </div>
+            
+            <div class="image-card">
+                <img src="[LINK TO MAIN IMAGE]" class="w-full h-auto" alt="Subject Description">
+                <div class="caption">Figure 01: [Provide a technical or descriptive caption here]</div>
+            </div>
+        </section>
+
+        <section id="technical" class="section-anchor">
+            <h3 class="text-3xl font-black uppercase mb-8 border-l-8 border-slate-900 pl-6">Technical Specifications</h3>
+            
+            <div class="content-text">
+                Introduce the technical parameters of your subject. Below is a 'Tech Card' which is perfect for listing data, chemical compositions, or engineering specs.
+            </div>
+
+            <div class="tech-card">
+                <h4 class="text-slate-400 font-black mb-4 uppercase tracking-widest text-xs">Primary Parameters:</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-700 pt-4">
+                    <div>[Spec Name]: <span class="text-white">[Value]</span></div>
+                    <div>[Spec Name]: <span class="text-white">[Value]</span></div>
+                    <div>[Spec Name]: <span class="text-white">[Value]</span></div>
+                    <div>[Spec Name]: <span class="text-white">[Value]</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="analysis" class="section-anchor">
+            <h3 class="text-3xl font-black uppercase mb-8 border-l-8 border-slate-900 pl-6">Industrial & Socio-Political Context</h3>
+            
+            <div class="content-text">
+                Use this area for deeper analysis. If you need to highlight sensitive information, warnings, or historical atrocities, use the <code>alert-box</code> provided below.
+            </div>
+
+            <div class="alert-box">
+                <p class="font-bold mb-2 uppercase text-xs">Critical Assessment:</p>
+                <div class="text-sm">
+                    Place sensitive or high-impact historical/social context here. The red border and light red background distinguish this from the standard technical analysis.
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-8">
+                <img src="[IMG 1]" class="w-full h-48 object-cover rounded shadow">
+                <img src="[IMG 2]" class="w-full h-48 object-cover rounded shadow">
+                <img src="[IMG 3]" class="w-full h-48 object-cover rounded shadow">
+            </div>
+        </section>
+
+        <section id="conclusion" class="section-anchor border-none">
+            <h3 class="text-3xl font-black uppercase mb-8">Summary of Findings</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm leading-relaxed">
+                <div class="bg-white p-6 rounded border border-slate-200 shadow-sm">
+                    <h4 class="font-black uppercase mb-2">Technical Legacy</h4>
+                    <p class="text-slate-600">Summarize the technological impact and how it influenced future developments.</p>
+                </div>
+                <div class="bg-white p-6 rounded border border-slate-200 shadow-sm">
+                    <h4 class="font-black uppercase mb-2">Final Conclusion</h4>
+                    <p class="text-slate-600">Provide the final verdict on the effectiveness and historical relevance of the subject.</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="bg-slate-900 text-white p-12 rounded-xl text-center shadow-2xl mt-12">
+            <h3 class="text-2xl font-black uppercase mb-4">Explore the Full-Scale Replica</h3>
+            <p class="text-slate-400 mb-8 max-w-lg mx-auto">Link your blog post directly to your shop product to drive conversions.</p>
+            <a href="[YOUR SHOP LINK]" class="inline-block bg-white text-slate-900 font-black uppercase tracking-widest text-xs px-10 py-4 rounded-full hover:bg-slate-200 transition">View in Shop</a>
+        </div>
+
+    </main>
+
+    <footer class="bg-slate-100 py-12 text-center border-t border-slate-200">
+        <p class="text-[10px] font-mono text-slate-400 uppercase tracking-widest">[COPYRIGHT AND TRADEMARK INFO]</p>
+    </footer>
+
+</body>
+</html>
