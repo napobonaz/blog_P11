@@ -55,6 +55,20 @@
   .tabs button:hover{ opacity: 1; }
   .topbar .autosave-note{ opacity: 0.7; font-size: 11px; }
 
+  .project-folder-bar{
+    background: var(--card);
+    border-bottom: 1.5px solid var(--ink);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--graphite);
+  }
+
   .wrap{ max-width: 1080px; margin: 0 auto; padding: 32px 24px 120px; }
   .tabpanel{ display: none; }
   .tabpanel.active{ display: block; }
@@ -273,6 +287,11 @@
     <button class="tab-btn" data-tab="post">Post Editor</button>
   </div>
   <span class="autosave-note" id="autosaveNote">draft autosaved</span>
+</div>
+
+<div class="project-folder-bar">
+  <span id="projectFolderStatus">Not linked — saves will ask you to choose each file's location individually.</span>
+  <button class="btn btn-stamp" id="linkFolderBtn">Link project folder…</button>
 </div>
 
 <div class="wrap">
@@ -938,12 +957,65 @@ function viewPostsForRow(row){
 /* ---------- File System Access: save-in-place handles ---------- */
 
 const FS_SUPPORTED = 'showSaveFilePicker' in window;
+const DIR_SUPPORTED = 'showDirectoryPicker' in window;
 const csvHandles = new Map();   // listId -> FileSystemFileHandle
 const pageHandles = new Map();  // listId -> FileSystemFileHandle
 let postHtmlHandle = null;
 let currentPostRow = null; // row object already added to a list's entries for this post draft, if any
 const postContentCache = new Map(); // row -> { heroFile, blocks: [...] } — full editable content, cached on save (this session only)
 const postHandleCache = new Map();  // row -> FileSystemFileHandle for that post's saved file
+
+/* Linking the project's root folder once lets every save write straight to
+   the right spot, since the layout is fixed relative to it:
+     <root>/index.html, <root>/projects.csv
+     <root>/subcat/<page>.html, <root>/subcat/<page>-projects.csv
+     <root>/subcat/posts/<post>.html
+     <root>/subcat/posts/models/<model files>
+   This lasts for the current browser tab only — reloading clears it, same
+   as the individual file handles below. */
+let projectDirHandle = null;
+let subcatDirHandle = null;
+let postsDirHandle = null;
+let modelsDirHandle = null;
+
+async function verifyDirPermission(handle){
+  const opts = { mode: 'readwrite' };
+  if((await handle.queryPermission(opts)) === 'granted') return true;
+  if((await handle.requestPermission(opts)) === 'granted') return true;
+  return false;
+}
+
+function updateProjectFolderStatus(){
+  const el = document.getElementById('projectFolderStatus');
+  if(!el) return;
+  if(!DIR_SUPPORTED){
+    el.textContent = "Your browser doesn't support linking a folder — saves will ask you to choose each file's location individually.";
+    return;
+  }
+  el.textContent = projectDirHandle
+    ? ('Linked: ' + projectDirHandle.name + '  (root · subcat/ · subcat/posts/ · subcat/posts/models/)')
+    : "Not linked — saves will ask you to choose each file's location individually.";
+}
+
+async function linkProjectFolder(){
+  if(!DIR_SUPPORTED){ alert("Your browser doesn't support linking a folder. Chrome or Edge are needed for this — saves will fall back to individual file dialogs."); return; }
+  try{
+    const handle = await window.showDirectoryPicker();
+    if(!(await verifyDirPermission(handle))){ alert('Permission to write to that folder was not granted.'); return; }
+    projectDirHandle = handle;
+    subcatDirHandle = await projectDirHandle.getDirectoryHandle('subcat', { create: true });
+    postsDirHandle = await subcatDirHandle.getDirectoryHandle('posts', { create: true });
+    modelsDirHandle = await postsDirHandle.getDirectoryHandle('models', { create: true });
+    updateProjectFolderStatus();
+    updateListSaveStatus();
+    updatePostSaveStatus();
+    note('project folder linked: ' + handle.name);
+  } catch(err){
+    if(err.name !== 'AbortError') alert('Could not link folder: ' + err.message);
+  }
+}
+
+document.getElementById('linkFolderBtn').addEventListener('click', linkProjectFolder);
 
 async function verifyPermission(handle){
   const opts = { mode: 'readwrite' };
@@ -961,6 +1033,11 @@ async function writeToHandle(handle, contents){
 function updateListSaveStatus(){
   const el = document.getElementById('listSaveStatus');
   const hint = document.getElementById('listSaveHint');
+  if(projectDirHandle){
+    hint.textContent = 'Project folder linked — Save writes straight to the right file, no dialog.';
+    el.textContent = '';
+    return;
+  }
   if(!FS_SUPPORTED){
     hint.textContent = "Your browser doesn't support saving directly to a file — Save will download a new copy each time; replace the old file manually.";
     el.textContent = '';
@@ -976,6 +1053,7 @@ function updateListSaveStatus(){
 
 function updatePostSaveStatus(){
   const el = document.getElementById('postSaveStatus');
+  if(projectDirHandle){ el.textContent = 'Project folder linked — Save writes straight to subcat/posts/, no dialog.'; return; }
   if(!FS_SUPPORTED){ el.textContent = "Your browser doesn't support saving directly to a file — Save will download a new copy each time."; return; }
   el.textContent = postHtmlHandle ? ('Linked: ' + postHtmlHandle.name) : 'Not yet linked — first save asks you to choose or create the file.';
 }
@@ -997,19 +1075,24 @@ function applyLoadedCsvRows(text, filename){
 }
 
 document.getElementById('loadCsvBtn').addEventListener('click', async () => {
-  if(FS_SUPPORTED){
-    try{
-      const [handle] = await window.showOpenFilePicker({ types: [{ description: 'CSV file', accept: { 'text/csv': ['.csv'] } }] });
-      const file = await handle.getFile();
-      const text = await file.text();
-      applyLoadedCsvRows(text, file.name);
-      csvHandles.set(currentListId, handle);
-      updateListSaveStatus();
-    } catch(err){
-      if(err.name !== 'AbortError') alert('Could not open file: ' + err.message);
+  if(!FS_SUPPORTED){ document.getElementById('loadCsvInput').click(); return; }
+  const l = lists[currentListId];
+  try{
+    let handle;
+    if(projectDirHandle && l.csvFile){
+      const dir = l.isRoot ? projectDirHandle : subcatDirHandle;
+      handle = await dir.getFileHandle(l.csvFile, { create: false }).catch(() => null);
+      if(!handle){ alert('No existing "' + l.csvFile + '" found yet in the linked project folder — save once first, or use "+ Add entry" to start fresh.'); return; }
+    } else {
+      [handle] = await window.showOpenFilePicker({ types: [{ description: 'CSV file', accept: { 'text/csv': ['.csv'] } }] });
     }
-  } else {
-    document.getElementById('loadCsvInput').click();
+    const file = await handle.getFile();
+    const text = await file.text();
+    applyLoadedCsvRows(text, file.name);
+    csvHandles.set(currentListId, handle);
+    updateListSaveStatus();
+  } catch(err){
+    if(err.name !== 'AbortError') alert('Could not open file: ' + err.message);
   }
 });
 
@@ -1026,7 +1109,24 @@ async function saveCsvForList(listId){
   if(!l) return false;
   if(!l.csvFile){ if(listId === currentListId) alert('Set a CSV filename first.'); return false; }
   const contents = serializeCSV(l.rows);
+
   if(!FS_SUPPORTED){ downloadText(l.csvFile, contents, 'text/csv'); return true; }
+
+  if(projectDirHandle){
+    try{
+      const dir = l.isRoot ? projectDirHandle : subcatDirHandle;
+      const handle = await dir.getFileHandle(l.csvFile, { create: true });
+      await writeToHandle(handle, contents);
+      csvHandles.set(listId, handle);
+      note('saved ' + l.csvFile + ' · ' + new Date().toLocaleTimeString());
+      if(listId === currentListId) updateListSaveStatus();
+      return true;
+    } catch(err){
+      alert('Saving "' + l.label + '" CSV failed: ' + err.message);
+      return false;
+    }
+  }
+
   try{
     let handle = csvHandles.get(listId);
     if(handle && !(await verifyPermission(handle))) handle = null;
@@ -1055,7 +1155,23 @@ async function savePageForList(){
   const l = lists[currentListId];
   if(!l.pageFile){ alert('Set a page filename first.'); return; }
   const contents = buildListPageHTML(l);
+
   if(!FS_SUPPORTED){ downloadText(l.pageFile, contents, 'text/html'); return; }
+
+  if(projectDirHandle){
+    try{
+      const dir = l.isRoot ? projectDirHandle : subcatDirHandle;
+      const handle = await dir.getFileHandle(l.pageFile, { create: true });
+      await writeToHandle(handle, contents);
+      pageHandles.set(currentListId, handle);
+      note('saved ' + l.pageFile + ' · ' + new Date().toLocaleTimeString());
+      updateListSaveStatus();
+    } catch(err){
+      alert('Save failed: ' + err.message);
+    }
+    return;
+  }
+
   try{
     let handle = pageHandles.get(currentListId);
     if(handle && !(await verifyPermission(handle))) handle = null;
@@ -2153,6 +2269,24 @@ document.getElementById('exportPostBtn').addEventListener('click', async () => {
 
     if(!FS_SUPPORTED){
       downloadText(filename, html, 'text/html');
+    } else if(projectDirHandle){
+      const handle = await postsDirHandle.getFileHandle(filename, { create: true });
+      await writeToHandle(handle, html);
+      postHtmlHandle = handle;
+
+      // Auto-save any dropped 3D model files (obj/fbx/mtl/textures) into subcat/posts/models/
+      for(const card of blockListEl.children){
+        if(card.dataset.type !== 'model') continue;
+        const store = postFileStore.get(card.id);
+        if(!store || !store.models) continue;
+        for(const f of store.models){
+          const mHandle = await modelsDirHandle.getFileHandle(f.name, { create: true });
+          await writeToHandle(mHandle, f);
+        }
+      }
+
+      updatePostSaveStatus();
+      note('saved ' + filename + ' · ' + new Date().toLocaleTimeString());
     } else {
       let handle = postHtmlHandle;
       if(handle && !(await verifyPermission(handle))) handle = null;
@@ -2220,6 +2354,7 @@ loadListIntoForm();
 refreshAttachListOptions();
 renderPostPreview();
 updatePostSaveStatus();
+updateProjectFolderStatus();
 
 if(draft && draft.postDraft){
   const m = draft.postDraft.meta || {};
