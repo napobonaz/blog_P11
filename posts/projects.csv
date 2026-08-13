@@ -1,8 +1,8 @@
 id,title,description,url,image,category,tag,date
-01,Sub topic 1,posts/vtol-uav.html,,uav,Aerospace,2026
-02,Sub topic 2,posts/lbm-solver.html,,lbm,Simulation,2026
-03,Sub topic 3,posts/edm-importer.html,,edm,Tooling,2026
-04,Sub topic 4,posts/plotter-toolchain.html,,plotter,Tooling,2026
-05,Sub topic 5,posts/hinge-fea.html,,fea,Simulation,2026
-06,Sub topic 6,posts/ju288.html,,aviation,History,2026
-07,Sub topic 7,posts/ju288.html,,aviation,History,2026
+01,Sub topic 1,Desciption 1,posts/vtol-uav.html,,uav,Aerospace,2026
+02,Sub topic 2,Desciption 2,posts/lbm-solver.html,,lbm,Simulation,2026
+03,Sub topic 3,Desciption 3,posts/edm-importer.html,,edm,Tooling,2026
+04,Sub topic 4,Desciption 4,posts/plotter-toolchain.html,,plotter,Tooling,2026
+05,Sub topic 5,Desciption 5,posts/hinge-fea.html,,fea,Simulation,2026
+06,Sub topic 6,Desciption 6,posts/ju288.html,,aviation,History,2026
+07,Sub topic 7,Desciption 7,posts/ju288.html,,aviation,History,2026
