@@ -317,7 +317,7 @@ function parseCSV(text){
 async function init(){
   const grid = document.getElementById('grid');
   try{
-    const res = await fetch('projects.csv');
+    const res = await fetch('f18-projects.csv');
     if(!res.ok) throw new Error('csv fetch failed: ' + res.status);
     const rows = parseCSV(await res.text());
 
