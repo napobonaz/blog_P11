@@ -1,0 +1,11 @@
+Open Command Prompt or PowerShell.
+
+Navigate to your project folder:
+
+DOS
+cd C:\Users\Admin\Documents\AAA_Blog\P11
+Start the server:
+
+DOS
+python -m http.server 8000
+Open your browser and go to: http://localhost:8000
