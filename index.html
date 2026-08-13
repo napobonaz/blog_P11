@@ -329,15 +329,9 @@ async function init(){
       card.className = 'card';
       card.href = p.url || '#';
 
-      const placeholder = `<div class="placeholder"><span>No preview yet</span><span>DWG–${p.id || String(i+1).padStart(2,'0')}</span></div>`;
-      const thumbInner = p.image
-        ? `<img src="${p.image}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{innerHTML:\`${placeholder}\`}).firstChild)">`
-        : placeholder;
-
       card.innerHTML = `
         <div class="thumb">
           <span class="dwg-no">DWG–${p.id || String(i+1).padStart(2,'0')}</span>
-          ${thumbInner}
         </div>
         <div class="body">
           <h2>${p.title}</h2>
@@ -348,6 +342,32 @@ async function init(){
           </div>
         </div>
       `;
+
+      const thumb = card.querySelector('.thumb');
+      const dwgLabel = p.id || String(i+1).padStart(2,'0');
+
+      function showPlaceholder(){
+        const div = document.createElement('div');
+        div.className = 'placeholder';
+        const a = document.createElement('span');
+        a.textContent = 'No preview yet';
+        const b = document.createElement('span');
+        b.textContent = 'DWG–' + dwgLabel;
+        div.append(a, b);
+        thumb.appendChild(div);
+      }
+
+      if(p.image){
+        const img = document.createElement('img');
+        img.src = p.image;
+        img.alt = '';
+        img.loading = 'lazy';
+        img.addEventListener('error', () => { img.remove(); showPlaceholder(); }, { once: true });
+        thumb.appendChild(img);
+      } else {
+        showPlaceholder();
+      }
+
       grid.appendChild(card);
     });
   } catch(err){
