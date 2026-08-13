@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+  :root{
+    --paper: #EEF0EA;
+    --paper-line: #C9CEC2;
+    --ink: #1E2A38;
+    --graphite: #5B6259;
+    --stamp: #B03A2E;
+    --brass: #8A6A3B;
+    --card: #F6F7F2;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin: 0;
+    background: linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0/100% 40px, var(--paper);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a{ color: inherit; }
+  button{ font-family: inherit; cursor: pointer; }
+
+  .topbar{
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    background: var(--ink); color: var(--paper);
+    padding: 0 24px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .topbar .title{ font-family: 'Oswald', sans-serif; font-size: 15px; letter-spacing: 0.04em; padding: 12px 0; }
+  .tabs{ display: flex; }
+  .tabs button{
+    background: transparent; border: none; border-bottom: 3px solid transparent;
+    color: var(--paper); opacity: 0.65;
+    padding: 14px 18px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .tabs button.active{ opacity: 1; border-bottom-color: var(--stamp); }
+  .tabs button:hover{ opacity: 1; }
+  .topbar .autosave-note{ opacity: 0.7; font-size: 11px; }
+
+  .wrap{ max-width: 1080px; margin: 0 auto; padding: 32px 24px 120px; }
+  .tabpanel{ display: none; }
+  .tabpanel.active{ display: block; }
+
+  fieldset{ border: 1.5px solid var(--ink); background: var(--card); padding: 20px 22px 22px; margin: 0 0 28px; }
+  legend{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--stamp); padding: 0 6px; }
+
+  label.field{ display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--graphite); margin: 14px 0 5px; }
+  label.field:first-child{ margin-top: 0; }
+
+  input[type=text], input[type=date], textarea, select{
+    width: 100%; border: 1px solid var(--paper-line); background: #fff; color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; padding: 8px 10px;
+  }
+  textarea{ resize: vertical; }
+
+  .row{ display: flex; gap: 16px; flex-wrap: wrap; }
+  .row > div{ flex: 1; min-width: 160px; }
+
+  .btn{
+    border: 1px solid var(--ink); background: var(--card); color: var(--ink);
+    padding: 9px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .btn:hover{ background: var(--ink); color: var(--paper); }
+  .btn-stamp{ border-color: var(--stamp); background: var(--stamp); color: #fff; }
+  .btn-stamp:hover{ background: #8f2f24; border-color: #8f2f24; }
+  .btn-ghost{ border-color: var(--paper); background: transparent; color: var(--paper); }
+  .btn-ghost:hover{ background: var(--paper); color: var(--ink); }
+  .btn-row{ display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+  .hint{ font-size: 11.5px; color: var(--graphite); font-family: 'IBM Plex Mono', monospace; margin-top: 6px; }
+
+  /* ---------- Lists tab: list picker + row table ---------- */
+
+  .list-picker{ display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px; }
+  .list-picker select{ flex: 1; min-width: 200px; }
+
+  table.rowtable{ width: 100%; border-collapse: collapse; margin-top: 14px; }
+  table.rowtable th{
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--graphite); text-align: left; padding: 6px 6px; border-bottom: 1.5px solid var(--ink);
+  }
+  table.rowtable td{ padding: 4px 6px; border-bottom: 1px solid var(--paper-line); vertical-align: top; }
+  table.rowtable input[type=text]{ font-size: 12.5px; padding: 5px 7px; }
+  table.rowtable td.narrow{ width: 64px; }
+  table.rowtable td.ctrl{ width: 96px; white-space: nowrap; }
+  table.rowtable td.ctrl button{
+    border: 1px solid var(--paper-line); background: #fff; font-size: 11px; padding: 3px 6px; margin-right: 3px;
+  }
+  table.rowtable td.ctrl button:hover{ border-color: var(--stamp); color: var(--stamp); }
+
+  /* ---------- Post tab: block cards (reused pattern) ---------- */
+
+  .dropzone{
+    border: 1.5px dashed var(--paper-line); background: #fff; padding: 18px; text-align: center;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--graphite);
+    text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer;
+  }
+  .dropzone.drag{ border-color: var(--stamp); color: var(--stamp); }
+  .dropzone img.preview{ display: block; max-width: 100%; max-height: 220px; margin: 0 auto 10px; border: 1px solid var(--paper-line); object-fit: contain; }
+
+  #blockList{ display: flex; flex-direction: column; gap: 20px; margin-bottom: 24px; }
+  .block-card{ border: 1.5px solid var(--ink); background: var(--card); }
+  .block-card .card-head{
+    display: flex; align-items: center; justify-content: space-between; background: var(--ink); color: var(--paper);
+    padding: 8px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .card-head .ctrls{ display: flex; gap: 6px; }
+  .card-head button{ background: transparent; border: 1px solid var(--paper); color: var(--paper); font-size: 11px; padding: 2px 7px; line-height: 1.4; }
+  .card-head button:hover{ background: var(--paper); color: var(--ink); }
+  .card-head button.danger:hover{ background: var(--stamp); border-color: var(--stamp); color: #fff; }
+  .card-body{ padding: 18px 20px; }
+
+  .add-toolbar{ display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; border: 1.5px dashed var(--paper-line); padding: 18px; margin-bottom: 40px; }
+  .add-toolbar button{ border: 1px solid var(--ink); background: var(--card); color: var(--ink); padding: 9px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .add-toolbar button:hover{ background: var(--ink); color: var(--paper); }
+
+  input[type=range]{ width: 100%; accent-color: var(--stamp); }
+  .range-readout{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--graphite); }
+  .check-row{ display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 10px; }
+
+  canvas.model-canvas{ width: 100%; display: block; background: var(--paper); border: 1px solid var(--paper-line); touch-action: none; }
+
+  .banner{
+    border: 1px solid var(--brass); background: var(--card); color: var(--ink);
+    padding: 10px 14px; font-size: 13px; margin-bottom: 20px; display: none;
+  }
+  .banner.show{ display: block; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="title">Site Manager</span>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="lists">Lists</button>
+    <button class="tab-btn" data-tab="post">New Post</button>
+  </div>
+  <span class="autosave-note" id="autosaveNote">draft autosaved</span>
+</div>
+
+<div class="wrap">
+
+  <!-- ================= LISTS TAB ================= -->
+  <div class="tabpanel active" id="tab-lists">
+
+    <fieldset>
+      <legend>Choose a list</legend>
+      <div class="list-picker">
+        <select id="listSelect"></select>
+        <button class="btn" id="newListBtn">+ New list</button>
+        <button class="btn" id="dupListBtn">Duplicate</button>
+        <button class="btn" id="deleteListBtn">Delete</button>
+      </div>
+      <p class="hint">A "list" is one index-style page (root or a subcategory) and the CSV that feeds it. The root index and each subcategory page (e.g. F1, F-18) are each their own list.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>List settings</legend>
+      <div class="row">
+        <div>
+          <label class="field">Label (for you, not published)</label>
+          <input type="text" id="listLabel" placeholder="e.g. F1 category">
+        </div>
+        <div>
+          <label class="field">Is this the root index?</label>
+          <select id="listIsRoot">
+            <option value="no">No — a subcategory page</option>
+            <option value="yes">Yes — this is the root index</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label class="field">Page filename</label>
+          <input type="text" id="listPageFile" placeholder="e.g. f1.html">
+        </div>
+        <div>
+          <label class="field">CSV filename</label>
+          <input type="text" id="listCsvFile" placeholder="e.g. f1-projects.csv">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label class="field">Page title</label>
+          <input type="text" id="listTitle" placeholder="e.g. Formula 1 Projects">
+        </div>
+        <div>
+          <label class="field">Link back to (parent page)</label>
+          <input type="text" id="listParentLink" placeholder="e.g. ../index.html">
+        </div>
+      </div>
+      <label class="field">Tagline</label>
+      <textarea id="listTagline" rows="2" placeholder="One line describing this list"></textarea>
+      <p class="hint">Filenames are relative to where you'll actually save the files — the page fetches its CSV filename from its own folder at runtime.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Entries</legend>
+      <div id="rowTableWrap"></div>
+      <div class="btn-row">
+        <button class="btn" id="addRowBtn">+ Add entry</button>
+      </div>
+    </fieldset>
+
+    <div class="btn-row">
+      <button class="btn" id="loadCsvBtn">Load existing CSV…</button>
+      <input type="file" id="loadCsvInput" accept=".csv" hidden>
+      <button class="btn btn-stamp" id="exportCsvBtn">Export CSV ↓</button>
+      <button class="btn btn-stamp" id="exportPageBtn">Export page HTML ↓</button>
+    </div>
+    <p class="hint">Export the page HTML once, when first creating this list. After that, just re-export the CSV when entries change — the page reads it at runtime.</p>
+
+  </div>
+
+  <!-- ================= NEW POST TAB ================= -->
+  <div class="tabpanel" id="tab-post">
+
+    <div class="banner" id="attachBanner"></div>
+
+    <fieldset>
+      <legend>Attach to a list</legend>
+      <label class="field">Add this post's entry to</label>
+      <select id="attachList"></select>
+      <p class="hint">On export, a matching entry is appended to that list's table on the Lists tab (you'll still need to export that list's CSV separately).</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Post metadata</legend>
+      <div class="row">
+        <div>
+          <label class="field">Category / eyebrow</label>
+          <input type="text" id="metaCategory" placeholder="e.g. Aerospace">
+        </div>
+        <div>
+          <label class="field">Date</label>
+          <input type="date" id="metaDate">
+        </div>
+      </div>
+      <label class="field">Title</label>
+      <input type="text" id="metaTitle" placeholder="Post title">
+      <label class="field">Dek (one-line summary)</label>
+      <textarea id="metaDek" rows="2" placeholder="One or two sentences that frame the post"></textarea>
+      <div class="row">
+        <div>
+          <label class="field">Tags (comma separated)</label>
+          <input type="text" id="metaTags" placeholder="Aerospace, Powertrain, VTOL">
+        </div>
+        <div>
+          <label class="field">Read time</label>
+          <input type="text" id="metaReadTime" placeholder="~9 min">
+        </div>
+      </div>
+      <label class="field">Hero image</label>
+      <div class="dropzone" id="heroDrop" tabindex="0">Drag &amp; drop an image, or click to choose one</div>
+      <input type="file" id="heroFile" accept="image/*" hidden>
+      <label class="field">Hero image description (alt text)</label>
+      <input type="text" id="heroAlt" placeholder="Describe the hero image">
+    </fieldset>
+
+    <fieldset>
+      <legend>Output paths</legend>
+      <div class="row">
+        <div>
+          <label class="field">Back link target</label>
+          <input type="text" id="postBackLink" placeholder="e.g. ../f1.html">
+        </div>
+        <div>
+          <label class="field">This post's relative URL (for the list entry)</label>
+          <input type="text" id="postRelUrl" placeholder="e.g. posts/new-post.html">
+        </div>
+      </div>
+      <p class="hint">These fill in automatically from the list you attach to, above — adjust if your folder layout differs.</p>
+    </fieldset>
+
+    <div id="blockList"></div>
+
+    <div class="add-toolbar">
+      <button data-add="heading">+ Heading</button>
+      <button data-add="text">+ Text block</button>
+      <button data-add="image">+ Image</button>
+      <button data-add="code">+ Code block</button>
+      <button data-add="model">+ 3D model</button>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-stamp" id="exportPostBtn">Export post HTML ↓</button>
+      <button class="btn" id="clearPostBtn">Clear this post</button>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+
+/* =========================================================
+   Shared: CSV parse / serialize
+   ========================================================= */
+
+function parseCSV(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for(let i = 0; i < text.length; i++){
+    const c = text[i], next = text[i+1];
+    if(inQuotes){
+      if(c === '"' && next === '"'){ field += '"'; i++; }
+      else if(c === '"'){ inQuotes = false; }
+      else { field += c; }
+    } else {
+      if(c === '"'){ inQuotes = true; }
+      else if(c === ','){ row.push(field); field = ''; }
+      else if(c === '\n' || c === '\r'){
+        if(c === '\r' && next === '\n') i++;
+        row.push(field); field = '';
+        if(row.some(v => v.trim() !== '')) rows.push(row);
+        row = [];
+      } else { field += c; }
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  const header = rows.shift().map(h => h.trim());
+  return rows.map(r => Object.fromEntries(header.map((h, idx) => [h, (r[idx] || '').trim()])));
+}
+
+const CSV_COLUMNS = ['id','title','description','url','image','category','tag','date'];
+
+function csvEscape(v){
+  v = String(v ?? '');
+  return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+}
+
+function serializeCSV(rows){
+  const lines = [CSV_COLUMNS.join(',')];
+  rows.forEach(r => lines.push(CSV_COLUMNS.map(c => csvEscape(r[c])).join(',')));
+  return lines.join('\n') + '\n';
+}
+
+function escapeHtml(s){
+  return (s || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+
+function downloadText(filename, text, mime){
+  const blob = new Blob([text], { type: mime || 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function fileToDataURL(file){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+function slugify(s){
+  return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+/* =========================================================
+   Tab switching
+   ========================================================= */
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tabpanel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab === 'post') refreshAttachListOptions();
+  });
+});
+
+/* =========================================================
+   Draft autosave (Lists tab is pure text/JSON — fully
+   persisted. Post tab: text fields only, files must be
+   re-dropped after a reload.)
+   ========================================================= */
+
+const STORAGE_KEY = 'siteManagerDraft';
+let saveTimer = null;
+function scheduleSave(){ clearTimeout(saveTimer); saveTimer = setTimeout(saveDraft, 700); }
+function note(msg){ document.getElementById('autosaveNote').textContent = msg; }
+
+function saveDraft(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ lists, postDraft: collectPostTextDraft() }));
+    note('draft autosaved · ' + new Date().toLocaleTimeString());
+  } catch(e){ note('autosave failed (storage full?)'); }
+}
+
+function loadDraft(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  } catch(e){ return null; }
+}
+
+/* =========================================================
+   Lists tab: state
+   lists = { [listId]: { label, isRoot, pageFile, csvFile,
+             title, tagline, parentLink, rows: [...] } }
+   ========================================================= */
+
+let lists = {};
+let currentListId = null;
+let listCounter = 0;
+
+function newListId(){ return 'list-' + (++listCounter); }
+
+function defaultList(label){
+  return {
+    label: label || 'New list', isRoot: false,
+    pageFile: 'index.html', csvFile: 'projects.csv',
+    title: '', tagline: '', parentLink: '../index.html',
+    rows: []
+  };
+}
+
+function ensureAtLeastOneList(){
+  if(Object.keys(lists).length === 0){
+    const id = newListId();
+    lists[id] = defaultList('Root index');
+    lists[id].isRoot = true;
+    lists[id].pageFile = 'index.html';
+    lists[id].csvFile = 'projects.csv';
+    lists[id].parentLink = '';
+    currentListId = id;
+  }
+}
+
+function refreshListSelect(){
+  const sel = document.getElementById('listSelect');
+  sel.innerHTML = '';
+  Object.entries(lists).forEach(([id, l]) => {
+    const o = document.createElement('option');
+    o.value = id;
+    o.textContent = l.label + (l.isRoot ? ' (root)' : '');
+    sel.appendChild(o);
+  });
+  sel.value = currentListId;
+}
+
+function loadListIntoForm(){
+  const l = lists[currentListId];
+  if(!l) return;
+  document.getElementById('listLabel').value = l.label;
+  document.getElementById('listIsRoot').value = l.isRoot ? 'yes' : 'no';
+  document.getElementById('listPageFile').value = l.pageFile;
+  document.getElementById('listCsvFile').value = l.csvFile;
+  document.getElementById('listTitle').value = l.title;
+  document.getElementById('listParentLink').value = l.parentLink;
+  document.getElementById('listTagline').value = l.tagline;
+  renderRowTable();
+}
+
+function bindListFormField(id, prop, transform){
+  document.getElementById(id).addEventListener('input', () => {
+    const l = lists[currentListId];
+    if(!l) return;
+    l[prop] = transform ? transform(document.getElementById(id).value) : document.getElementById(id).value;
+    if(id === 'listLabel') refreshListSelect();
+    scheduleSave();
+  });
+}
+bindListFormField('listLabel', 'label');
+bindListFormField('listPageFile', 'pageFile');
+bindListFormField('listCsvFile', 'csvFile');
+bindListFormField('listTitle', 'title');
+bindListFormField('listParentLink', 'parentLink');
+bindListFormField('listTagline', 'tagline');
+document.getElementById('listIsRoot').addEventListener('change', (e) => {
+  const l = lists[currentListId];
+  if(!l) return;
+  l.isRoot = e.target.value === 'yes';
+  refreshListSelect();
+  scheduleSave();
+});
+
+document.getElementById('listSelect').addEventListener('change', (e) => {
+  currentListId = e.target.value;
+  loadListIntoForm();
+});
+
+document.getElementById('newListBtn').addEventListener('click', () => {
+  const id = newListId();
+  lists[id] = defaultList('New list');
+  currentListId = id;
+  refreshListSelect();
+  loadListIntoForm();
+  scheduleSave();
+});
+
+document.getElementById('dupListBtn').addEventListener('click', () => {
+  const src = lists[currentListId];
+  if(!src) return;
+  const id = newListId();
+  lists[id] = JSON.parse(JSON.stringify(src));
+  lists[id].label = src.label + ' copy';
+  lists[id].isRoot = false;
+  currentListId = id;
+  refreshListSelect();
+  loadListIntoForm();
+  scheduleSave();
+});
+
+document.getElementById('deleteListBtn').addEventListener('click', () => {
+  if(Object.keys(lists).length <= 1){ alert('At least one list must remain.'); return; }
+  if(!confirm('Delete "' + lists[currentListId].label + '"? This only affects the draft — any files you already exported are unaffected.')) return;
+  delete lists[currentListId];
+  currentListId = Object.keys(lists)[0];
+  refreshListSelect();
+  loadListIntoForm();
+  scheduleSave();
+});
+
+/* ---------- Row table ---------- */
+
+function renderRowTable(){
+  const l = lists[currentListId];
+  const wrap = document.getElementById('rowTableWrap');
+  wrap.innerHTML = '';
+  if(!l.rows.length){
+    wrap.innerHTML = '<p class="hint">No entries yet — add one below, or load an existing CSV.</p>';
+    return;
+  }
+  const table = document.createElement('table');
+  table.className = 'rowtable';
+  table.innerHTML = `<thead><tr>
+    <th class="narrow">ID</th><th>Title</th><th>Description</th><th>URL</th><th>Image</th><th>Category</th><th>Tag</th><th>Date</th><th></th>
+  </tr></thead>`;
+  const tbody = document.createElement('tbody');
+  l.rows.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    const idTd = document.createElement('td');
+    idTd.className = 'narrow';
+    idTd.textContent = row.id || String(i+1).padStart(2,'0');
+    tr.appendChild(idTd);
+    ['title','description','url','image','category','tag','date'].forEach(col => {
+      const td = document.createElement('td');
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.value = row[col] || '';
+      inp.addEventListener('input', () => { row[col] = inp.value; scheduleSave(); });
+      td.appendChild(inp);
+      tr.appendChild(td);
+    });
+    const ctrlTd = document.createElement('td');
+    ctrlTd.className = 'ctrl';
+    const up = document.createElement('button'); up.textContent = '↑';
+    up.addEventListener('click', () => { if(i>0){ [l.rows[i-1], l.rows[i]] = [l.rows[i], l.rows[i-1]]; renderRowTable(); scheduleSave(); } });
+    const down = document.createElement('button'); down.textContent = '↓';
+    down.addEventListener('click', () => { if(i<l.rows.length-1){ [l.rows[i+1], l.rows[i]] = [l.rows[i], l.rows[i+1]]; renderRowTable(); scheduleSave(); } });
+    const del = document.createElement('button'); del.textContent = '✕';
+    del.addEventListener('click', () => { l.rows.splice(i,1); renumberRows(l); renderRowTable(); scheduleSave(); });
+    ctrlTd.append(up, down, del);
+    tr.appendChild(ctrlTd);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+}
+
+function renumberRows(l){
+  l.rows.forEach((r, i) => { r.id = String(i+1).padStart(2,'0'); });
+}
+
+document.getElementById('addRowBtn').addEventListener('click', () => {
+  const l = lists[currentListId];
+  l.rows.push({ id: String(l.rows.length+1).padStart(2,'0'), title:'', description:'', url:'', image:'', category:'', tag:'', date: new Date().toISOString().slice(0,10) });
+  renderRowTable();
+  scheduleSave();
+});
+
+/* ---------- Load / export CSV ---------- */
+
+document.getElementById('loadCsvBtn').addEventListener('click', () => document.getElementById('loadCsvInput').click());
+document.getElementById('loadCsvInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const text = await file.text();
+  const rows = parseCSV(text).map((r, i) => ({
+    id: r.id || String(i+1).padStart(2,'0'), title: r.title||'', description: r.description||'',
+    url: r.url||'', image: r.image||'', category: r.category||'', tag: r.tag||'', date: r.date||''
+  }));
+  lists[currentListId].rows = rows;
+  if(!lists[currentListId].csvFile) lists[currentListId].csvFile = file.name;
+  document.getElementById('listCsvFile').value = lists[currentListId].csvFile;
+  renderRowTable();
+  scheduleSave();
+});
+
+document.getElementById('exportCsvBtn').addEventListener('click', () => {
+  const l = lists[currentListId];
+  if(!l.csvFile){ alert('Set a CSV filename first.'); return; }
+  downloadText(l.csvFile, serializeCSV(l.rows), 'text/csv');
+});
+
+document.getElementById('exportPageBtn').addEventListener('click', () => {
+  const l = lists[currentListId];
+  if(!l.pageFile){ alert('Set a page filename first.'); return; }
+  downloadText(l.pageFile, buildListPageHTML(l), 'text/html');
+});
+
+function buildListPageHTML(l){
+  const backLink = (!l.isRoot && l.parentLink)
+    ? `<p class="back-link"><a href="${escapeHtml(l.parentLink)}">← All categories</a></p>` : '';
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtml(l.title || l.label)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{ --paper:#EEF0EA; --paper-line:#C9CEC2; --ink:#1E2A38; --graphite:#5B6259; --stamp:#B03A2E; --brass:#8A6A3B; --card:#F6F7F2; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background: linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0/100% 40px, var(--paper); background-attachment:fixed; color:var(--ink); font-family:'IBM Plex Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+  a{ color:inherit; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:56px 32px 96px; }
+  .back-link{ margin:0 0 20px; font-family:'IBM Plex Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.06em; }
+  .back-link a{ text-decoration:none; }
+  .back-link a:hover{ color:var(--stamp); }
+  .coversheet{ border:1.5px solid var(--ink); background:var(--card); padding:32px 32px 20px; margin-bottom:56px; }
+  .coversheet .eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.14em; color:var(--stamp); text-transform:uppercase; margin:0 0 10px; }
+  .coversheet h1{ font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.02em; font-size:clamp(30px,5vw,46px); margin:0 0 10px; line-height:1.05; }
+  .coversheet .tagline{ font-size:15px; color:var(--graphite); max-width:46em; margin:0 0 24px; line-height:1.55; }
+  .titleblock{ display:flex; flex-wrap:wrap; border-top:1px solid var(--ink); font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--graphite); }
+  .titleblock div{ padding:10px 20px 0 0; margin-right:20px; }
+  .titleblock span{ display:block; color:var(--ink); font-size:13px; margin-top:2px; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:28px; }
+  .card{ position:relative; display:flex; flex-direction:column; background:var(--card); border:1.5px solid var(--ink); text-decoration:none; color:var(--ink); transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .card:hover{ transform:translateY(-4px); border-color:var(--stamp); box-shadow:6px 6px 0 rgba(30,42,56,0.08); }
+  .thumb{ aspect-ratio:16/10; border-bottom:1.5px solid var(--ink); background:var(--paper); position:relative; overflow:hidden; }
+  .thumb img{ width:100%; height:100%; object-fit:cover; }
+  .thumb .placeholder{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; width:100%; height:100%; color:var(--graphite); font-family:'IBM Plex Mono',monospace; text-transform:uppercase; letter-spacing:0.08em; font-size:11px; background: repeating-linear-gradient(45deg, var(--paper-line) 0, var(--paper-line) 1px, transparent 1px, transparent 10px); }
+  .dwg-no{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.06em; color:var(--stamp); position:absolute; top:10px; left:10px; background:var(--paper); padding:2px 6px; border:1px solid var(--ink); }
+  .body{ padding:18px 20px 16px; flex:1; display:flex; flex-direction:column; }
+  .body h2{ font-family:'Oswald',sans-serif; font-weight:600; text-transform:uppercase; font-size:18px; margin:0 0 8px; line-height:1.25; }
+  .body p{ font-size:14px; line-height:1.55; color:var(--graphite); margin:0; flex:1; }
+  .footer-strip{ display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--paper-line); margin-top:16px; padding-top:12px; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.05em; text-transform:uppercase; }
+  .tag{ border:1px solid var(--brass); color:var(--brass); padding:3px 7px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  ${backLink}
+  <header class="coversheet">
+    <p class="eyebrow">${escapeHtml(l.label)}</p>
+    <h1>${escapeHtml(l.title || l.label)}</h1>
+    ${l.tagline ? `<p class="tagline">${escapeHtml(l.tagline)}</p>` : ''}
+    <div class="titleblock">
+      <div>Sheets<span id="sheet-count">—</span></div>
+      <div>Source<span>${escapeHtml(l.csvFile)}</span></div>
+    </div>
+  </header>
+  <main class="grid" id="grid" aria-live="polite"></main>
+</div>
+<script>
+${csvLoaderScript(l.csvFile)}
+<\/script>
+</body>
+</html>`;
+}
+
+const MODEL_VIEWER_SOURCE = `
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
+export async function initModelViewer(canvas, files){
+  const nameOf = f => (f.name || '').toLowerCase();
+  const main = files.find(f => nameOf(f).endsWith('.obj') || nameOf(f).endsWith('.fbx'));
+  if(!main){ throw new Error('No .obj or .fbx file found among the provided files.'); }
+  const isObj = nameOf(main).endsWith('.obj');
+  const mtl = files.find(f => nameOf(f).endsWith('.mtl'));
+
+  const urlMap = new Map();
+  files.forEach(f => urlMap.set(f.name, URL.createObjectURL(f)));
+
+  const manager = new THREE.LoadingManager();
+  manager.setURLModifier(url => {
+    const base = url.split('/').pop().split('?')[0];
+    return urlMap.get(base) || url;
+  });
+
+  const scene = new THREE.Scene();
+  scene.background = null;
+
+  const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / (canvas.height || 320), 0.01, 5000);
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x30302a, 1.1);
+  const dir = new THREE.DirectionalLight(0xffffff, 1.4);
+  dir.position.set(3, 5, 4);
+  scene.add(hemi, dir);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+
+  function resize(){
+    const w = canvas.clientWidth || 600;
+    const h = canvas.height || 320;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let root = null;
+
+  function frameObject(obj){
+    const box = new THREE.Box3().setFromObject(obj);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    obj.position.sub(center);
+    const dist = Math.max(size.x, size.y, size.z, 0.01) * 1.8;
+    camera.position.set(dist, dist * 0.6, dist);
+    camera.near = dist / 100;
+    camera.far = dist * 100;
+    camera.updateProjectionMatrix();
+    controls.target.set(0, 0, 0);
+    controls.update();
+  }
+
+  async function load(){
+    if(isObj){
+      const objLoader = new OBJLoader(manager);
+      if(mtl){
+        const mtlLoader = new MTLLoader(manager);
+        const materials = await mtlLoader.loadAsync(urlMap.get(mtl.name));
+        materials.preload();
+        objLoader.setMaterials(materials);
+      }
+      root = await objLoader.loadAsync(urlMap.get(main.name));
+    } else {
+      const fbxLoader = new FBXLoader(manager);
+      root = await fbxLoader.loadAsync(urlMap.get(main.name));
+    }
+    scene.add(root);
+    frameObject(root);
+  }
+
+  let raf = null;
+  function animate(){
+    raf = requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  await load();
+  animate();
+
+  return {
+    setWireframe(on){
+      if(!root) return;
+      root.traverse(o => {
+        if(o.isMesh && o.material){
+          const mats = Array.isArray(o.material) ? o.material : [o.material];
+          mats.forEach(m => { m.wireframe = on; });
+        }
+      });
+    },
+    dispose(){
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', resize);
+      controls.dispose();
+      renderer.dispose();
+      urlMap.forEach(u => URL.revokeObjectURL(u));
+      scene.traverse(o => {
+        if(o.isMesh){
+          o.geometry && o.geometry.dispose();
+          const mats = Array.isArray(o.material) ? o.material : [o.material];
+          mats.forEach(m => m && m.dispose && m.dispose());
+        }
+      });
+    }
+  };
+}
+`;
+
+/* Loads the viewer module at editor-time via a blob URL — works even when
+   this page itself is opened directly via file://, since dynamic import()
+   of a blob: URL is not subject to the same-origin module restriction that
+   blocks importing a second local .mjs file. */
+let _viewerModulePromise = null;
+function getViewerModule(){
+  if(!_viewerModulePromise){
+    const blob = new Blob([MODEL_VIEWER_SOURCE], { type: 'text/javascript' });
+    const url = URL.createObjectURL(blob);
+    _viewerModulePromise = import(url);
+  }
+  return _viewerModulePromise;
+}
+
+/* Builds the HTML+script to embed in an exported post. The viewer source is
+   pasted in verbatim (no external file), so the exported post is fully
+   self-contained too. */
+function buildViewerBlockHTML(id, filenames, wireframeDefault){
+  const fileListJs = JSON.stringify(filenames.map(n => 'models/' + n));
+  return `
+<div class="model-figure">
+  <canvas id="${id}" class="model-canvas" height="360"></canvas>
+  <div class="model-controls">
+    <label><input type="checkbox" id="${id}-wireframe"${wireframeDefault ? ' checked' : ''}> Wireframe view</label>
+    <span>Drag to orbit · scroll to zoom</span>
+  </div>
+</div>
+<script type="module">
+${MODEL_VIEWER_SOURCE}
+  const files = await Promise.all(${fileListJs}.map(async (path) => {
+    const res = await fetch(path);
+    const blob = await res.blob();
+    return new File([blob], path.split('/').pop());
+  }));
+  const canvas = document.getElementById('${id}');
+  const handle = await initModelViewer(canvas, files);
+  handle.setWireframe(${wireframeDefault ? 'true' : 'false'});
+  document.getElementById('${id}-wireframe').addEventListener('change', (e) => handle.setWireframe(e.target.checked));
+<\/script>`;
+}
+
+
+function csvLoaderScript(csvFile){
+  return `function parseCSV(text){
+  const rows = []; let row = [], field = '', inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i], next=text[i+1];
+    if(inQuotes){ if(c==='"'&&next==='"'){field+='"';i++;} else if(c==='"'){inQuotes=false;} else {field+=c;} }
+    else { if(c==='"'){inQuotes=true;} else if(c===','){row.push(field);field='';}
+      else if(c==='\\n'||c==='\\r'){ if(c==='\\r'&&next==='\\n')i++; row.push(field); field='';
+        if(row.some(v=>v.trim()!=='')) rows.push(row); row=[]; }
+      else { field+=c; } }
+  }
+  if(field.length||row.length){row.push(field);rows.push(row);}
+  const header = rows.shift().map(h=>h.trim());
+  return rows.map(r=>Object.fromEntries(header.map((h,idx)=>[h,(r[idx]||'').trim()])));
+}
+async function init(){
+  const grid = document.getElementById('grid');
+  try{
+    const res = await fetch('${csvFile}');
+    if(!res.ok) throw new Error('csv fetch failed: '+res.status);
+    const rows = parseCSV(await res.text());
+    document.getElementById('sheet-count').textContent = String(rows.length).padStart(2,'0');
+    rows.forEach((p,i)=>{
+      const card = document.createElement('a');
+      card.className = 'card';
+      card.href = p.url || '#';
+      const placeholder = '<div class="placeholder"><span>No preview yet</span><span>DWG–'+(p.id||String(i+1).padStart(2,'0'))+'</span></div>';
+      card.innerHTML = '<div class="thumb"><span class="dwg-no">DWG–'+(p.id||String(i+1).padStart(2,'0'))+'</span></div>'
+        + '<div class="body"><h2>'+p.title+'</h2><p>'+p.description+'</p>'
+        + '<div class="footer-strip"><span class="tag">'+(p.tag||'Project')+'</span><span>'+(p.date||'')+' · View →</span></div></div>';
+      const thumb = card.querySelector('.thumb');
+      if(p.image){
+        const img = document.createElement('img');
+        img.src = p.image; img.alt = ''; img.loading = 'lazy';
+        img.addEventListener('error', () => { img.remove(); thumb.insertAdjacentHTML('beforeend', placeholder); }, { once:true });
+        thumb.appendChild(img);
+      } else {
+        thumb.insertAdjacentHTML('beforeend', placeholder);
+      }
+      grid.appendChild(card);
+    });
+  } catch(err){
+    grid.innerHTML = '<p style="font-family:\\'IBM Plex Mono\\',monospace;color:#B03A2E;">Could not load ${csvFile} ('+err.message+'). Serve this folder over HTTP instead of opening the file directly.</p>';
+  }
+}
+init();`;
+}
+
+/* =========================================================
+   New Post tab
+   ========================================================= */
+
+let postBlockCounter = 0;
+const postFileStore = new Map(); // blockId -> { image?: File, models?: File[] }
+const blockListEl = document.getElementById('blockList');
+
+function pval(id){ return document.getElementById(id).value; }
+
+function collectPostTextDraft(){
+  const meta = {
+    category: pval('metaCategory'), date: pval('metaDate'), title: pval('metaTitle'),
+    dek: pval('metaDek'), tags: pval('metaTags'), readTime: pval('metaReadTime'),
+    heroAlt: pval('heroAlt'), backLink: pval('postBackLink'), relUrl: pval('postRelUrl'),
+    attachList: document.getElementById('attachList').value
+  };
+  const blocks = [...blockListEl.children].map(card => {
+    const type = card.dataset.type;
+    const base = { type };
+    if(type === 'heading'){
+      base.level = card.querySelector('.f-level').value;
+      base.align = card.querySelector('.f-align').value;
+      base.text = card.querySelector('.f-text').innerHTML;
+    } else if(type === 'text'){
+      base.font = card.querySelector('.f-font').value;
+      base.size = card.querySelector('.f-size').value;
+      base.align = card.querySelector('.f-align').value;
+      base.html = card.querySelector('.f-html').innerHTML;
+    } else if(type === 'image'){
+      base.alt = card.querySelector('.f-alt').value;
+      base.caption = card.querySelector('.f-caption').value;
+      base.width = card.querySelector('.f-width').value;
+      base.align = card.querySelector('.f-align').value;
+    } else if(type === 'code'){
+      base.lang = card.querySelector('.f-lang').value;
+      base.code = card.querySelector('.f-code').value;
+      base.height = card.querySelector('.f-height').value;
+      base.description = card.querySelector('.f-desc').value;
+    } else if(type === 'model'){
+      base.caption = card.querySelector('.f-caption').value;
+      base.wireframe = card.querySelector('.f-wireframe').checked;
+    }
+    return base;
+  });
+  return { meta, blocks };
+}
+
+function nextBlockId(){ return 'pblock-' + (++postBlockCounter); }
+
+function cardShell(type, label){
+  const card = document.createElement('div');
+  card.className = 'block-card';
+  card.dataset.type = type;
+  card.id = nextBlockId();
+  const head = document.createElement('div');
+  head.className = 'card-head';
+  const title = document.createElement('span');
+  title.textContent = label;
+  const ctrls = document.createElement('div');
+  ctrls.className = 'ctrls';
+  const up = mkBtn('↑', () => moveBlock(card, -1));
+  const down = mkBtn('↓', () => moveBlock(card, 1));
+  const del = mkBtn('✕ remove', () => { postFileStore.delete(card.id); card.remove(); scheduleSave(); });
+  del.classList.add('danger');
+  ctrls.append(up, down, del);
+  head.append(title, ctrls);
+  const body = document.createElement('div');
+  body.className = 'card-body';
+  card.append(head, body);
+  return { card, body };
+}
+
+function mkBtn(txt, onClick){
+  const b = document.createElement('button');
+  b.type = 'button'; b.textContent = txt;
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+function moveBlock(card, dir){
+  const sibling = dir < 0 ? card.previousElementSibling : card.nextElementSibling;
+  if(!sibling) return;
+  if(dir < 0) blockListEl.insertBefore(card, sibling);
+  else blockListEl.insertBefore(sibling, card);
+  scheduleSave();
+}
+
+function field(labelText, inputEl){
+  const wrap = document.createElement('div');
+  const lab = document.createElement('label');
+  lab.className = 'field'; lab.textContent = labelText;
+  wrap.append(lab, inputEl);
+  return wrap;
+}
+
+function mkHint(text){
+  const p = document.createElement('div');
+  p.className = 'hint'; p.textContent = text;
+  return p;
+}
+
+function formatToolbar(){
+  const bar = document.createElement('div');
+  bar.style.cssText = 'display:flex;gap:6px;margin:10px 0 -4px;';
+  const mk = (label, cmd) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = label;
+    b.style.cssText = 'border:1px solid var(--ink);background:#fff;padding:4px 10px;font-size:12px;';
+    b.addEventListener('mousedown', e => e.preventDefault());
+    b.addEventListener('click', () => document.execCommand(cmd, false, null));
+    return b;
+  };
+  bar.append(mk('B', 'bold'), mk('I', 'italic'), mk('Link', 'createLink'));
+  bar.children[2].addEventListener('click', () => {
+    const url = prompt('Link URL:');
+    if(url) document.execCommand('createLink', false, url);
+  });
+  return bar;
+}
+
+function setupDropzone(zoneEl, inputEl, onFile){
+  zoneEl.addEventListener('click', () => inputEl.click());
+  zoneEl.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') inputEl.click(); });
+  inputEl.addEventListener('change', () => { if(inputEl.files[0]) onFile(inputEl.files[0]); });
+  ['dragenter','dragover'].forEach(evt => zoneEl.addEventListener(evt, e => { e.preventDefault(); zoneEl.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(evt => zoneEl.addEventListener(evt, e => { e.preventDefault(); zoneEl.classList.remove('drag'); }));
+  zoneEl.addEventListener('drop', e => { const file = e.dataTransfer.files && e.dataTransfer.files[0]; if(file) onFile(file); });
+}
+
+/* ---------- Hero dropzone ---------- */
+
+setupDropzone(document.getElementById('heroDrop'), document.getElementById('heroFile'), async (file) => {
+  postFileStore.set('__hero__', file);
+  const dataUrl = await fileToDataURL(file);
+  const dz = document.getElementById('heroDrop');
+  dz.innerHTML = '';
+  const img = document.createElement('img');
+  img.className = 'preview'; img.src = dataUrl;
+  dz.appendChild(img);
+  const label = document.createElement('div');
+  label.textContent = file.name + ' — drop a different file to replace';
+  dz.appendChild(label);
+  scheduleSave();
+});
+
+/* ---------- Heading block ---------- */
+
+function addHeadingBlock(){
+  const { card, body } = cardShell('heading', 'Heading');
+  const row = document.createElement('div'); row.className = 'row';
+  const level = document.createElement('select'); level.className = 'f-level';
+  ['h2','h3','h4'].forEach(l => { const o=document.createElement('option'); o.value=l; o.textContent=l.toUpperCase(); level.appendChild(o); });
+  const align = document.createElement('select'); align.className = 'f-align';
+  ['left','center'].forEach(a => { const o=document.createElement('option'); o.value=a; o.textContent=a; align.appendChild(o); });
+  row.append(field('Level', level), field('Alignment', align));
+  const toolbar = formatToolbar();
+  const text = document.createElement('div');
+  text.className = 'f-text'; text.contentEditable = 'true';
+  text.style.cssText = 'border:1px solid var(--paper-line);background:#fff;padding:10px 12px;font-family:Oswald,sans-serif;font-weight:600;text-transform:uppercase;font-size:20px;min-height:40px;';
+  body.append(row, toolbar, field('Text', text));
+  [level, align].forEach(el => el.addEventListener('change', scheduleSave));
+  text.addEventListener('input', scheduleSave);
+  blockListEl.appendChild(card);
+  scheduleSave();
+}
+
+/* ---------- Text block ---------- */
+
+function addTextBlock(){
+  const { card, body } = cardShell('text', 'Text block');
+  const row = document.createElement('div'); row.className = 'row';
+  const font = document.createElement('select'); font.className = 'f-font';
+  [['sans','IBM Plex Sans (body default)'],['serif','Source Serif 4'],['mono','IBM Plex Mono'],['display','Oswald']]
+    .forEach(([v,l]) => { const o=document.createElement('option'); o.value=v; o.textContent=l; font.appendChild(o); });
+  const size = document.createElement('input');
+  size.type = 'range'; size.min = 14; size.max = 28; size.value = 16; size.className = 'f-size';
+  const sizeOut = document.createElement('span'); sizeOut.className = 'range-readout'; sizeOut.textContent = '16px';
+  const align = document.createElement('select'); align.className = 'f-align';
+  ['left','center','justify'].forEach(a => { const o=document.createElement('option'); o.value=a; o.textContent=a; align.appendChild(o); });
+  const sizeWrap = document.createElement('div'); sizeWrap.append(size, sizeOut);
+  row.append(field('Font', font), field('Size', sizeWrap), field('Alignment', align));
+  const toolbar = formatToolbar();
+  const html = document.createElement('div');
+  html.className = 'f-html'; html.contentEditable = 'true';
+  html.style.cssText = 'border:1px solid var(--paper-line);background:#fff;padding:10px 12px;min-height:90px;line-height:1.7;';
+  function applyTextStyle(){
+    const fam = { sans:"'IBM Plex Sans',sans-serif", serif:"'Source Serif 4',serif", mono:"'IBM Plex Mono',monospace", display:"'Oswald',sans-serif" }[font.value];
+    html.style.fontFamily = fam; html.style.fontSize = size.value + 'px'; html.style.textAlign = align.value;
+  }
+  size.addEventListener('input', () => { sizeOut.textContent = size.value+'px'; applyTextStyle(); scheduleSave(); });
+  font.addEventListener('change', () => { applyTextStyle(); scheduleSave(); });
+  align.addEventListener('change', () => { applyTextStyle(); scheduleSave(); });
+  html.addEventListener('input', scheduleSave);
+  applyTextStyle();
+  body.append(row, toolbar, field('Text', html));
+  blockListEl.appendChild(card);
+  scheduleSave();
+}
+
+/* ---------- Image block ---------- */
+
+function addImageBlock(){
+  const { card, body } = cardShell('image', 'Image');
+  const dz = document.createElement('div'); dz.className = 'dropzone'; dz.tabIndex = 0;
+  dz.textContent = 'Drag & drop an image, or click to choose one';
+  const fileInput = document.createElement('input'); fileInput.type = 'file'; fileInput.accept = 'image/*'; fileInput.hidden = true;
+  setupDropzone(dz, fileInput, async (file) => {
+    const store = postFileStore.get(card.id) || {};
+    store.image = file; postFileStore.set(card.id, store);
+    const dataUrl = await fileToDataURL(file);
+    dz.innerHTML = '';
+    const img = document.createElement('img'); img.className = 'preview'; img.src = dataUrl;
+    dz.appendChild(img);
+    const label = document.createElement('div'); label.textContent = file.name + ' — drop a different file to replace';
+    dz.appendChild(label);
+    scheduleSave();
+  });
+  const alt = document.createElement('input'); alt.type = 'text'; alt.className = 'f-alt'; alt.placeholder = 'Describe the image (alt text)';
+  const caption = document.createElement('input'); caption.type = 'text'; caption.className = 'f-caption'; caption.placeholder = 'Caption shown under the image';
+  const row = document.createElement('div'); row.className = 'row';
+  const width = document.createElement('input');
+  width.type = 'range'; width.min = 25; width.max = 100; width.value = 100; width.step = 5; width.className = 'f-width';
+  const widthOut = document.createElement('span'); widthOut.className = 'range-readout'; widthOut.textContent = '100%';
+  width.addEventListener('input', () => { widthOut.textContent = width.value+'%'; scheduleSave(); });
+  const widthWrap = document.createElement('div'); widthWrap.append(width, widthOut);
+  const align = document.createElement('select'); align.className = 'f-align';
+  ['center','left','right'].forEach(a => { const o=document.createElement('option'); o.value=a; o.textContent=a; align.appendChild(o); });
+  row.append(field('Display width', widthWrap), field('Alignment', align));
+  [alt, caption].forEach(el => el.addEventListener('input', scheduleSave));
+  align.addEventListener('change', scheduleSave);
+  body.append(field('Image', dz), fileInput, field('Description / alt text', alt), field('Caption', caption), row);
+  body.append(mkHint('Import per drag & drop. On export, the file is embedded directly into the HTML.'));
+  blockListEl.appendChild(card);
+  scheduleSave();
+}
+
+/* ---------- Code block ---------- */
+
+function addCodeBlock(){
+  const { card, body } = cardShell('code', 'Code block');
+  const row = document.createElement('div'); row.className = 'row';
+  const lang = document.createElement('input'); lang.type = 'text'; lang.className = 'f-lang'; lang.placeholder = 'e.g. python';
+  const height = document.createElement('input');
+  height.type = 'range'; height.min = 100; height.max = 600; height.value = 220; height.step = 10; height.className = 'f-height';
+  const heightOut = document.createElement('span'); heightOut.className = 'range-readout'; heightOut.textContent = '220px';
+  const code = document.createElement('textarea');
+  code.className = 'f-code'; code.rows = 8; code.spellcheck = false; code.placeholder = 'Paste code here';
+  code.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--ink);color:#E8EAE3;border-radius:8px;padding:16px;height:220px;";
+  height.addEventListener('input', () => { heightOut.textContent = height.value+'px'; code.style.height = height.value+'px'; scheduleSave(); });
+  const heightWrap = document.createElement('div'); heightWrap.append(height, heightOut);
+  row.append(field('Language label', lang), field('Field size (adjustable)', heightWrap));
+  const desc = document.createElement('textarea'); desc.className = 'f-desc'; desc.rows = 2; desc.placeholder = 'Describe what this code does';
+  [lang, code, desc].forEach(el => el.addEventListener('input', scheduleSave));
+  body.append(row, field('Code (scrolls, rounded corners)', code), field('Code description', desc));
+  blockListEl.appendChild(card);
+  scheduleSave();
+}
+
+/* ---------- 3D model block ---------- */
+
+function addModelBlock(){
+  const { card, body } = cardShell('model', '3D model');
+  const dz = document.createElement('div'); dz.className = 'dropzone'; dz.tabIndex = 0;
+  dz.textContent = 'Drag & drop model files: a .obj or .fbx, plus optional .mtl and texture images';
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file'; fileInput.hidden = true; fileInput.multiple = true;
+  fileInput.accept = '.obj,.fbx,.mtl,.png,.jpg,.jpeg';
+  const canvas = document.createElement('canvas'); canvas.className = 'model-canvas'; canvas.height = 320; canvas.hidden = true;
+  const wireframeRow = document.createElement('div'); wireframeRow.className = 'check-row';
+  const wireframe = document.createElement('input'); wireframe.type = 'checkbox'; wireframe.className = 'f-wireframe';
+  const wfLabel = document.createElement('label'); wfLabel.textContent = 'Wireframe view';
+  wireframeRow.append(wireframe, wfLabel); wireframeRow.hidden = true;
+  const fileListNode = document.createElement('div'); fileListNode.className = 'hint';
+  let viewerHandle = null;
+
+  async function handleFiles(files){
+    const arr = [...files];
+    const store = postFileStore.get(card.id) || {};
+    store.models = arr; postFileStore.set(card.id, store);
+    fileListNode.textContent = 'Loaded: ' + arr.map(f => f.name).join(', ');
+    canvas.hidden = false; wireframeRow.hidden = false; dz.hidden = true;
+    if(viewerHandle) viewerHandle.dispose();
+    const { initModelViewer } = await getViewerModule();
+    viewerHandle = await initModelViewer(canvas, arr);
+    wireframe.checked = false;
+    wireframe.onchange = () => viewerHandle.setWireframe(wireframe.checked);
+    scheduleSave();
+  }
+
+  dz.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => { if(fileInput.files.length) handleFiles(fileInput.files); });
+  ['dragenter','dragover'].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); dz.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); dz.classList.remove('drag'); }));
+  dz.addEventListener('drop', e => { if(e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
+
+  const caption = document.createElement('input'); caption.type = 'text'; caption.className = 'f-caption'; caption.placeholder = 'Caption shown under the model';
+  caption.addEventListener('input', scheduleSave);
+
+  body.append(
+    field('Model files', dz), fileInput, fileListNode, canvas, wireframeRow,
+    mkHint('Drag to orbit, scroll to zoom. On export, upload these same files to a models/ folder next to your post — the exported page loads them from there.'),
+    field('Caption', caption)
+  );
+  blockListEl.appendChild(card);
+  scheduleSave();
+}
+
+document.querySelectorAll('.add-toolbar [data-add]').forEach(b => {
+  b.addEventListener('click', () => {
+    const fn = { heading: addHeadingBlock, text: addTextBlock, image: addImageBlock, code: addCodeBlock, model: addModelBlock }[b.dataset.add];
+    fn();
+  });
+});
+
+document.querySelectorAll('#metaTitle, #metaCategory, #metaDate, #metaDek, #metaTags, #metaReadTime, #heroAlt, #postBackLink, #postRelUrl')
+  .forEach(el => el.addEventListener('input', scheduleSave));
+
+document.getElementById('clearPostBtn').addEventListener('click', () => {
+  if(!confirm('Clear all blocks and metadata for this post?')) return;
+  blockListEl.innerHTML = '';
+  postFileStore.clear();
+  ['metaCategory','metaDate','metaTitle','metaDek','metaTags','metaReadTime','heroAlt','postBackLink','postRelUrl']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('heroDrop').textContent = 'Drag & drop an image, or click to choose one';
+  scheduleSave();
+});
+
+/* ---------- Attach to list ---------- */
+
+function refreshAttachListOptions(){
+  const sel = document.getElementById('attachList');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— None —</option>';
+  Object.entries(lists).forEach(([id, l]) => {
+    const o = document.createElement('option');
+    o.value = id;
+    o.textContent = l.label + (l.isRoot ? ' (root)' : '');
+    sel.appendChild(o);
+  });
+  if([...sel.options].some(o => o.value === prev)) sel.value = prev;
+}
+
+document.getElementById('attachList').addEventListener('change', () => {
+  const id = document.getElementById('attachList').value;
+  const banner = document.getElementById('attachBanner');
+  if(!id){ banner.classList.remove('show'); scheduleSave(); return; }
+  const l = lists[id];
+  const backEl = document.getElementById('postBackLink');
+  const relEl = document.getElementById('postRelUrl');
+  if(!backEl.value) backEl.value = l.isRoot ? '../index.html' : '../' + l.pageFile;
+  if(!relEl.value) relEl.value = 'posts/' + (slugify(pval('metaTitle')) || 'new-post') + '.html';
+  banner.textContent = 'On export, an entry will be added to "' + l.label + '". Export that list\'s CSV afterward from the Lists tab.';
+  banner.classList.add('show');
+  scheduleSave();
+});
+
+document.getElementById('metaTitle').addEventListener('blur', () => {
+  const relEl = document.getElementById('postRelUrl');
+  if(document.getElementById('attachList').value && !relEl.dataset.userEdited){
+    relEl.value = 'posts/' + (slugify(pval('metaTitle')) || 'new-post') + '.html';
+  }
+});
+document.getElementById('postRelUrl').addEventListener('input', (e) => { e.target.dataset.userEdited = '1'; });
+
+/* ---------- Export post ---------- */
+
+async function buildPostHTML(){
+  const meta = {
+    category: pval('metaCategory') || 'Category',
+    date: pval('metaDate') || new Date().toISOString().slice(0,10),
+    title: pval('metaTitle') || 'Untitled post',
+    dek: pval('metaDek') || '',
+    tags: pval('metaTags').split(',').map(s => s.trim()).filter(Boolean),
+    readTime: pval('metaReadTime') || '',
+    backLink: pval('postBackLink') || '../index.html'
+  };
+
+  const heroFile = postFileStore.get('__hero__');
+  const heroAlt = escapeHtml(pval('heroAlt'));
+  let heroHtml = '';
+  if(heroFile){
+    const dataUrl = await fileToDataURL(heroFile);
+    heroHtml = `\n  <figure class="hero-figure"><div class="hero"><img src="${dataUrl}" alt="${heroAlt}"></div></figure>`;
+  }
+
+  const blockCards = [...blockListEl.children];
+  const parts = [];
+  let modelCounter = 0;
+
+  for(const card of blockCards){
+    const type = card.dataset.type;
+    if(type === 'heading'){
+      const level = card.querySelector('.f-level').value;
+      const align = card.querySelector('.f-align').value;
+      const text = card.querySelector('.f-text').innerHTML;
+      parts.push(`<${level} style="text-align:${align}">${text}</${level}>`);
+    } else if(type === 'text'){
+      const font = card.querySelector('.f-font').value;
+      const size = card.querySelector('.f-size').value;
+      const align = card.querySelector('.f-align').value;
+      const fam = { sans:"'IBM Plex Sans',sans-serif", serif:"'Source Serif 4',serif", mono:"'IBM Plex Mono',monospace", display:"'Oswald',sans-serif" }[font];
+      const html = card.querySelector('.f-html').innerHTML;
+      parts.push(`<div style="font-family:${fam};font-size:${size}px;text-align:${align};line-height:1.7;margin:0 0 20px;">${html}</div>`);
+    } else if(type === 'image'){
+      const store = postFileStore.get(card.id);
+      if(store && store.image){
+        const dataUrl = await fileToDataURL(store.image);
+        const alt = escapeHtml(card.querySelector('.f-alt').value);
+        const caption = escapeHtml(card.querySelector('.f-caption').value);
+        const width = card.querySelector('.f-width').value;
+        const align = card.querySelector('.f-align').value;
+        const marginRule = align === 'center' ? 'margin-left:auto;margin-right:auto;' : (align === 'right' ? 'margin-left:auto;' : '');
+        parts.push(`\n<figure class="inline-figure" style="width:${width}%;${marginRule}">\n  <img src="${dataUrl}" alt="${alt}">\n  ${caption ? `<figcaption>${caption}</figcaption>` : ''}\n</figure>`);
+      }
+    } else if(type === 'code'){
+      const lang = escapeHtml(card.querySelector('.f-lang').value);
+      const height = card.querySelector('.f-height').value;
+      const code = escapeHtml(card.querySelector('.f-code').value);
+      const desc = escapeHtml(card.querySelector('.f-desc').value);
+      parts.push(`\n${lang ? `<p class="code-lang">${lang}</p>` : ''}\n<pre style="height:${height}px;"><code>${code}</code></pre>\n${desc ? `<p class="code-desc">${desc}</p>` : ''}`);
+    } else if(type === 'model'){
+      const store = postFileStore.get(card.id);
+      if(store && store.models && store.models.length){
+        modelCounter++;
+        const id = 'model-' + modelCounter;
+        const wireframe = card.querySelector('.f-wireframe').checked;
+        const caption = escapeHtml(card.querySelector('.f-caption').value);
+        const filenames = store.models.map(f => f.name);
+        parts.push(buildViewerBlockHTML(id, filenames, wireframe));
+        if(caption) parts.push(`<figcaption>${caption}</figcaption>`);
+      }
+    }
+  }
+
+  const tagsHtml = meta.tags.length ? `<div class="tags">${meta.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>` : '';
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtml(meta.title)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+<\/script>
+<style>
+  :root{ --paper:#EEF0EA; --paper-line:#C9CEC2; --ink:#1E2A38; --graphite:#5B6259; --stamp:#B03A2E; --brass:#8A6A3B; --card:#F6F7F2; }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{ margin:0; background: linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0/100% 40px, var(--paper); background-attachment:fixed; color:var(--ink); font-family:'IBM Plex Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--ink); }
+  a:focus-visible{ outline:2px solid var(--stamp); outline-offset:3px; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:32px 32px 96px; }
+  .runner{ display:flex; align-items:center; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--graphite); border-bottom:1px solid var(--paper-line); padding-bottom:14px; margin-bottom:40px; }
+  .runner a{ text-decoration:none; color:var(--ink); }
+  .runner a:hover{ color:var(--stamp); }
+  .coversheet{ border:1.5px solid var(--ink); background:var(--card); padding:32px 32px 20px; margin-bottom:40px; }
+  .coversheet .eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.14em; color:var(--stamp); text-transform:uppercase; margin:0 0 10px; }
+  .coversheet h1{ font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.02em; font-size:clamp(28px,4.6vw,44px); margin:0 0 10px; line-height:1.08; }
+  .coversheet .dek{ font-size:16px; color:var(--graphite); max-width:46em; margin:0 0 24px; line-height:1.55; }
+  .titleblock{ display:flex; flex-wrap:wrap; border-top:1px solid var(--ink); font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--graphite); }
+  .titleblock div{ padding:10px 20px 0 0; margin-right:20px; }
+  .titleblock span{ display:block; color:var(--ink); font-size:13px; margin-top:2px; }
+  .hero{ border:1.5px solid var(--ink); background:var(--card); margin-bottom:8px; overflow:hidden; }
+  .hero img{ display:block; width:100%; max-height:520px; object-fit:cover; }
+  figure.hero-figure{ margin:0 0 48px; }
+  article{ max-width:68ch; margin:0 auto; }
+  article h2{ font-family:'Oswald',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:0.01em; font-size:24px; margin:48px 0 16px; padding-bottom:8px; border-bottom:1px solid var(--paper-line); }
+  article h3, article h4{ font-family:'Oswald',sans-serif; font-weight:600; letter-spacing:0.01em; font-size:18px; text-transform:uppercase; margin:32px 0 12px; color:var(--ink); }
+  article p{ font-size:16px; line-height:1.7; color:#2B3644; margin:0 0 20px; }
+  article a{ color:var(--stamp); }
+  figure.inline-figure{ margin:32px auto; }
+  figure.inline-figure img{ display:block; width:100%; border:1.5px solid var(--ink); }
+  figure.inline-figure figcaption{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--graphite); padding:8px 2px 0; }
+  .code-lang{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--stamp); margin:28px 0 6px; }
+  pre{ background:var(--ink); color:#E8EAE3; font-family:'IBM Plex Mono',monospace; font-size:13px; line-height:1.6; padding:18px 20px; overflow:auto; margin:0 0 8px; border-radius:8px; }
+  .code-desc{ font-size:14px; color:var(--graphite); margin:0 0 28px; }
+  .model-figure{ margin:32px 0 8px; }
+  canvas.model-canvas{ width:100%; display:block; background:var(--paper); border:1.5px solid var(--ink); touch-action:none; }
+  .model-controls{ display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--graphite); padding:8px 2px 0; text-transform:uppercase; letter-spacing:0.04em; }
+  .tags{ display:flex; gap:8px; flex-wrap:wrap; margin:40px 0 0; }
+  .tags .tag{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.05em; text-transform:uppercase; border:1px solid var(--brass); color:var(--brass); padding:3px 8px; }
+  footer.colophon{ max-width:68ch; margin:64px auto 0; padding-top:20px; border-top:1px solid var(--paper-line); font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--graphite); text-transform:uppercase; letter-spacing:0.05em; }
+  footer.colophon a{ color:var(--ink); text-decoration:none; }
+  footer.colophon a:hover{ color:var(--stamp); }
+  @media (max-width:640px){ article{ max-width:100%; } }
+  @media (prefers-reduced-motion: reduce){ html{ scroll-behavior:auto; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="runner">
+    <a href="${escapeHtml(meta.backLink)}" id="back-link-top">← Back</a>
+    <span>${escapeHtml(meta.date)}</span>
+  </div>
+  <header class="coversheet">
+    <p class="eyebrow">${escapeHtml(meta.category)}</p>
+    <h1>${escapeHtml(meta.title)}</h1>
+    ${meta.dek ? `<p class="dek">${escapeHtml(meta.dek)}</p>` : ''}
+    <div class="titleblock">
+      <div>Category<span>${escapeHtml(meta.category)}</span></div>
+      <div>Date<span>${escapeHtml(meta.date)}</span></div>
+      ${meta.readTime ? `<div>Read time<span>${escapeHtml(meta.readTime)}</span></div>` : ''}
+    </div>
+  </header>${heroHtml}
+  <article>
+    ${parts.join('\n')}
+    ${tagsHtml}
+  </article>
+  <footer class="colophon">
+    <a href="${escapeHtml(meta.backLink)}" id="back-link-bottom">← Back</a>
+  </footer>
+</div>
+<script>
+  function enableBack(id){
+    const link = document.getElementById(id);
+    if(!link) return;
+    if(window.history.length > 1 && document.referrer){
+      link.addEventListener('click', (e) => { e.preventDefault(); window.history.back(); });
+    }
+  }
+  enableBack('back-link-top');
+  enableBack('back-link-bottom');
+<\/script>
+</body>
+</html>`;
+}
+
+document.getElementById('exportPostBtn').addEventListener('click', async () => {
+  const btnEl = document.getElementById('exportPostBtn');
+  const original = btnEl.textContent;
+  btnEl.textContent = 'Building…';
+  try{
+    const html = await buildPostHTML();
+    const relUrl = pval('postRelUrl');
+    const filename = relUrl ? relUrl.split('/').pop() : (slugify(pval('metaTitle')) || 'post') + '.html';
+    downloadText(filename, html, 'text/html');
+
+    const attachId = document.getElementById('attachList').value;
+    if(attachId && lists[attachId]){
+      const l = lists[attachId];
+      const tags = pval('metaTags').split(',').map(s => s.trim()).filter(Boolean);
+      l.rows.push({
+        id: String(l.rows.length+1).padStart(2,'0'),
+        title: pval('metaTitle') || 'Untitled post',
+        description: pval('metaDek') || '',
+        url: relUrl || ('posts/' + filename),
+        image: '',
+        category: pval('metaCategory') || '',
+        tag: tags[0] || '',
+        date: pval('metaDate') || new Date().toISOString().slice(0,10)
+      });
+      renumberRows(l);
+      if(currentListId === attachId) renderRowTable();
+      alert('Post exported, and an entry was added to "' + l.label + '". Switch to the Lists tab and export its CSV to publish the update.');
+    }
+    scheduleSave();
+  } catch(err){
+    alert('Export failed: ' + err.message);
+  } finally {
+    btnEl.textContent = original;
+  }
+});
+
+/* =========================================================
+   Boot
+   ========================================================= */
+
+const draft = loadDraft();
+if(draft && draft.lists && Object.keys(draft.lists).length){
+  lists = draft.lists;
+  listCounter = Object.keys(lists).reduce((m, id) => Math.max(m, parseInt(id.split('-')[1]||0,10)), 0);
+  currentListId = Object.keys(lists)[0];
+} else {
+  ensureAtLeastOneList();
+}
+refreshListSelect();
+loadListIntoForm();
+refreshAttachListOptions();
+
+if(draft && draft.postDraft){
+  const m = draft.postDraft.meta || {};
+  document.getElementById('metaCategory').value = m.category || '';
+  document.getElementById('metaDate').value = m.date || '';
+  document.getElementById('metaTitle').value = m.title || '';
+  document.getElementById('metaDek').value = m.dek || '';
+  document.getElementById('metaTags').value = m.tags || '';
+  document.getElementById('metaReadTime').value = m.readTime || '';
+  document.getElementById('heroAlt').value = m.heroAlt || '';
+  document.getElementById('postBackLink').value = m.backLink || '';
+  document.getElementById('postRelUrl').value = m.relUrl || '';
+  if(m.attachList){ document.getElementById('attachList').value = m.attachList; document.getElementById('attachList').dispatchEvent(new Event('change')); }
+  note('draft restored — re-drop any images/models');
+}
+</script>
+
+</body>
+</html>

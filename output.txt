@@ -1,0 +1,25 @@
+
+C:\Users\Admin\Documents\AAA_Blog\P11
+¦   index.html
+¦   projects.csv
+¦   
++---images
+¦       1.jpg
+¦       2.jpg
+¦       3.png
+¦       
++---subcat
+¦   ¦   f-18.html
+¦   ¦   f1-projects.csv
+¦   ¦   f1.html
+¦   ¦   f18-projects.csv
+¦   ¦   
+¦   +---posts
+¦       ¦   me-155-blender-model.html
+¦       ¦   model-viewer.mjs
+¦       ¦   post1.html
+¦       ¦   vtol-uav.html
+¦       ¦   
+¦       +---models
+¦               bv155c_v1.3.fbx
+
