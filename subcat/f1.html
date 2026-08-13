@@ -277,7 +277,7 @@
       <div>Sheets<span id="sheet-count">—</span></div>
       <div>Rev<span>A</span></div>
       <div>Updated<span id="sheet-date">—</span></div>
-      <div>Source<span>f1-projects.csv</span></div>
+      <div>Source<span>formula-1-projects.csv</span></div>
     </div>
   </header>
 
@@ -317,7 +317,7 @@ function parseCSV(text){
 async function init(){
   const grid = document.getElementById('grid');
   try{
-    const res = await fetch('f1-projects.csv');
+    const res = await fetch('formula-1-projects.csv');
     if(!res.ok) throw new Error('csv fetch failed: ' + res.status);
     const rows = parseCSV(await res.text());
 

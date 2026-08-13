@@ -246,11 +246,14 @@
   .row-card .meta-fields .mrow{ display: flex; gap: 6px; }
   .row-card .meta-fields .mrow > div{ flex: 1; }
   .row-card .remove-entry{
-    align-self: flex-start; margin-top: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
     text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid var(--paper-line); background: #fff;
     padding: 3px 8px; color: var(--graphite);
   }
   .row-card .remove-entry:hover{ border-color: var(--stamp); color: var(--stamp); }
+  .row-card .entry-actions{ display: flex; gap: 6px; margin-top: 6px; }
+  .row-card .entry-newpost{ border-color: var(--brass); color: var(--brass); }
+  .row-card .entry-newpost:hover{ background: var(--brass); border-color: var(--brass); color: #fff; }
 
   .add-card{
     border: 1.5px dashed var(--paper-line); display: flex; align-items: center; justify-content: center;
@@ -258,6 +261,7 @@
     letter-spacing: 0.05em; color: var(--graphite); cursor: pointer;
   }
   .add-card:hover{ border-color: var(--stamp); color: var(--stamp); }
+  .add-card-post:hover{ border-color: var(--brass); color: var(--brass); }
 </style>
 </head>
 <body>
@@ -298,10 +302,11 @@
           <label class="field">Is this the root index?</label>
           <select id="listIsRoot">
             <option value="no">No — a subcategory page</option>
-            <option value="yes">Yes — this is the root index</option>
+            <option value="yes">Yes — this is the root index (main categories)</option>
           </select>
         </div>
       </div>
+      <p class="hint">The root index lists main categories that link down to subcategory pages. Use a category's "+ new post" button below to add a post — it's automatically associated with that category's subcategory list.</p>
       <div class="row">
         <div>
           <label class="field">Page filename</label>
@@ -330,11 +335,6 @@
     <fieldset>
       <legend>Entries</legend>
       <div id="rowTableWrap"></div>
-      <div class="btn-row">
-        <button class="btn" id="addRowBtn">+ Add entry</button>
-        <button class="btn btn-stamp" id="newPostForListBtn">+ New post in this list</button>
-      </div>
-      <p class="hint">A new post opens in the Post Editor, already attached to this list — saving it adds an entry here and updates this list's CSV automatically.</p>
     </fieldset>
 
     <div class="btn-row">
@@ -686,13 +686,20 @@ function renderRowTable(){
   const wrap = document.getElementById('rowTableWrap');
   wrap.innerHTML = '';
 
+  if(l.isRoot){
+    const note = document.createElement('p');
+    note.className = 'hint';
+    note.textContent = 'These are main categories. Press "+ new post" on one to add a post to its matching subcategory list automatically.';
+    wrap.appendChild(note);
+  }
+
   const grid = document.createElement('div');
   grid.className = 'row-grid';
 
   l.rows.forEach((row, i) => {
     const card = document.createElement('div');
     card.className = 'row-card';
-    card.draggable = true;
+    card.draggable = false; // only becomes draggable while the handle is actually pressed — see below
     card.dataset.index = i;
 
     const thumb = document.createElement('div');
@@ -703,6 +710,8 @@ function renderRowTable(){
     const handle = document.createElement('span');
     handle.className = 'drag-handle';
     handle.textContent = '⠿';
+    handle.addEventListener('mousedown', () => { card.draggable = true; });
+    handle.addEventListener('mouseup', () => { card.draggable = false; });
     thumb.append(dwg, handle);
     if(isPreviewableImage(row.image)){
       const img = document.createElement('img');
@@ -767,7 +776,26 @@ function renderRowTable(){
     removeBtn.textContent = '✕ remove entry';
     removeBtn.addEventListener('click', () => { l.rows.splice(i,1); renumberRows(l); renderRowTable(); scheduleSave(); });
 
-    body.append(title, desc, toggle, metaFields, removeBtn);
+    const entryActions = document.createElement('div');
+    entryActions.className = 'entry-actions';
+    const newPostBtn = document.createElement('button');
+    newPostBtn.type = 'button'; newPostBtn.className = 'remove-entry entry-newpost';
+    newPostBtn.textContent = '+ new post';
+    newPostBtn.title = l.isRoot
+      ? 'Adds a post to this category\'s subcategory list'
+      : 'Opens the Post Editor, attached to this list';
+    newPostBtn.addEventListener('click', () => {
+      if(l.isRoot){
+        const match = findLinkedListForRow(row);
+        if(match) startNewPostForList(match[0]);
+        else handleUnlinkedCategoryPost(row);
+      } else {
+        startNewPostForList(currentListId);
+      }
+    });
+    entryActions.append(newPostBtn, removeBtn);
+
+    body.append(title, desc, toggle, metaFields, entryActions);
     card.append(thumb, body);
     grid.appendChild(card);
   });
@@ -782,7 +810,7 @@ function renderRowTable(){
   });
   grid.addEventListener('dragend', (e) => {
     const card = e.target.closest('.row-card');
-    if(card) card.classList.remove('dragging');
+    if(card){ card.classList.remove('dragging'); card.draggable = false; }
     grid.querySelectorAll('.drag-over').forEach(c => c.classList.remove('drag-over'));
   });
   grid.addEventListener('dragover', (e) => {
@@ -809,8 +837,17 @@ function renderRowTable(){
   const addCard = document.createElement('div');
   addCard.className = 'add-card';
   addCard.textContent = '+ Add entry';
-  addCard.addEventListener('click', () => document.getElementById('addRowBtn').click());
+  addCard.addEventListener('click', addBlankRow);
   grid.appendChild(addCard);
+
+  if(!l.isRoot){
+    const newPostCard = document.createElement('div');
+    newPostCard.className = 'add-card add-card-post';
+    newPostCard.textContent = '+ New post';
+    newPostCard.title = 'Opens the Post Editor, already attached to this list';
+    newPostCard.addEventListener('click', () => startNewPostForList(currentListId));
+    grid.appendChild(newPostCard);
+  }
 
   wrap.appendChild(grid);
 }
@@ -819,12 +856,54 @@ function renumberRows(l){
   l.rows.forEach((r, i) => { r.id = String(i+1).padStart(2,'0'); });
 }
 
-document.getElementById('addRowBtn').addEventListener('click', () => {
+function addBlankRow(){
   const l = lists[currentListId];
   l.rows.push({ id: String(l.rows.length+1).padStart(2,'0'), title:'', description:'', url:'', image:'', category:'', tag:'', date: new Date().toISOString().slice(0,10) });
   renderRowTable();
   scheduleSave();
-});
+}
+
+function startNewPostForList(listId){
+  if(lists[listId] && lists[listId].isRoot){
+    alert('Posts belong to a subcategory, not to the root index. Open (or create) a subcategory list first.');
+    return;
+  }
+  const hasContent = blockListEl.children.length > 0 || pval('metaTitle').trim() !== '';
+  if(hasContent && !confirm('Start a new post? The current post draft (not yet saved) will be cleared.')) return;
+  clearPostEditor();
+  switchTab('post');
+  document.getElementById('attachList').value = listId;
+  document.getElementById('attachList').dispatchEvent(new Event('change'));
+  scheduleSave();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* A root entry (main category, e.g. "Formula 1") is linked to a subcategory
+   list by matching its url's filename against that list's pageFile — e.g.
+   an entry with url "subcat/f1.html" links to the list whose pageFile is
+   "f1.html". Posts pressed from a category button always land in the
+   linked subcategory list, never in the root itself. */
+function findLinkedListForRow(row){
+  if(!row.url) return null;
+  const base = row.url.split('/').pop();
+  const found = Object.entries(lists).find(([, l]) => !l.isRoot && l.pageFile && l.pageFile.split('/').pop() === base);
+  return found || null;
+}
+
+function handleUnlinkedCategoryPost(row){
+  const label = row.title || 'This category';
+  if(!confirm('"' + label + '" isn\'t linked to a subcategory list yet. Create one now to hold its posts?')) return;
+  const slug = slugify(row.title) || ('subcat-' + (Object.keys(lists).length + 1));
+  const id = newListId();
+  lists[id] = defaultList(row.title || 'New subcategory');
+  lists[id].pageFile = slug + '.html';
+  lists[id].csvFile = slug + '-projects.csv';
+  lists[id].title = row.title || lists[id].label;
+  if(!row.url){ row.url = 'subcat/' + lists[id].pageFile; renderRowTable(); }
+  refreshListSelect();
+  scheduleSave();
+  startNewPostForList(id);
+}
 
 /* ---------- File System Access: save-in-place handles ---------- */
 
@@ -1295,13 +1374,15 @@ function cardShell(type, label){
   card.className = 'block-card';
   card.dataset.type = type;
   card.id = nextBlockId();
-  card.draggable = true;
+  card.draggable = false; // only becomes draggable while the handle is actually pressed — see below
   const head = document.createElement('div');
   head.className = 'card-head';
   const left = document.createElement('span');
   const handle = document.createElement('span');
   handle.className = 'drag-handle';
   handle.textContent = '⠿ ';
+  handle.addEventListener('mousedown', () => { card.draggable = true; });
+  handle.addEventListener('mouseup', () => { card.draggable = false; });
   const title = document.createElement('span');
   title.textContent = label;
   left.append(handle, title);
@@ -1325,6 +1406,7 @@ function cardShell(type, label){
   });
   card.addEventListener('dragend', () => {
     card.classList.remove('dragging');
+    card.draggable = false;
     blockListEl.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(c => c.classList.remove('drag-over-top','drag-over-bottom'));
   });
 
@@ -1697,18 +1779,6 @@ document.getElementById('clearPostBtn').addEventListener('click', () => {
   scheduleSave();
 });
 
-document.getElementById('newPostForListBtn').addEventListener('click', () => {
-  const hasContent = blockListEl.children.length > 0 || pval('metaTitle').trim() !== '';
-  if(hasContent && !confirm('Start a new post? The current post draft (not yet saved) will be cleared.')) return;
-
-  clearPostEditor();
-  switchTab('post');
-  document.getElementById('attachList').value = currentListId;
-  document.getElementById('attachList').dispatchEvent(new Event('change'));
-  scheduleSave();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-
 /* ---------- Attach to list ---------- */
 
 function refreshAttachListOptions(){
@@ -1716,12 +1786,13 @@ function refreshAttachListOptions(){
   const prev = sel.value;
   sel.innerHTML = '<option value="">— None —</option>';
   Object.entries(lists).forEach(([id, l]) => {
+    if(l.isRoot) return; // posts attach to a subcategory only — the root (main categories) is never a valid target
     const o = document.createElement('option');
     o.value = id;
-    o.textContent = l.label + (l.isRoot ? ' (root)' : '');
+    o.textContent = l.label;
     sel.appendChild(o);
   });
-  if([...sel.options].some(o => o.value === prev)) sel.value = prev;
+  sel.value = [...sel.options].some(o => o.value === prev) ? prev : '';
 }
 
 document.getElementById('attachList').addEventListener('change', () => {
