@@ -380,7 +380,7 @@
 
   <!-- Running header: edit the index link/path if your file layout differs -->
   <div class="runner">
-    <a href="../index.html">← Index</a>
+    <a href="../index.html" id="back-link-top">← Back</a>
     <span>DWG–01 · Rev A</span>
   </div>
 
@@ -492,11 +492,30 @@
   </article>
 
   <footer class="colophon">
-    <a href="../index.html">← Back to project index</a>
+    <a href="../index.html" id="back-link-bottom">← Back</a>
     <span>Last updated 2026-08-13</span>
   </footer>
 
 </div>
+
+<script>
+  // Prefer a real "back" action (returns to wherever the reader came from,
+  // e.g. the index, a search engine, or another post) when browser history
+  // is available. Falls back to the plain ../index.html link otherwise —
+  // e.g. if the post was opened directly in a new tab or bookmarked.
+  function enableBack(id){
+    const link = document.getElementById(id);
+    if(!link) return;
+    if(window.history.length > 1 && document.referrer){
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.history.back();
+      });
+    }
+  }
+  enableBack('back-link-top');
+  enableBack('back-link-bottom');
+</script>
 
 </body>
 </html>
