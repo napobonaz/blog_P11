@@ -266,7 +266,7 @@
   <span class="title">Site Manager</span>
   <div class="tabs">
     <button class="tab-btn active" data-tab="lists">Lists</button>
-    <button class="tab-btn" data-tab="post">New Post</button>
+    <button class="tab-btn" data-tab="post">Post Editor</button>
   </div>
   <span class="autosave-note" id="autosaveNote">draft autosaved</span>
 </div>
@@ -332,7 +332,9 @@
       <div id="rowTableWrap"></div>
       <div class="btn-row">
         <button class="btn" id="addRowBtn">+ Add entry</button>
+        <button class="btn btn-stamp" id="newPostForListBtn">+ New post in this list</button>
       </div>
+      <p class="hint">A new post opens in the Post Editor, already attached to this list — saving it adds an entry here and updates this list's CSV automatically.</p>
     </fieldset>
 
     <div class="btn-row">
@@ -511,14 +513,16 @@ function slugify(s){
    Tab switching
    ========================================================= */
 
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tabpanel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if(name === 'post') refreshAttachListOptions();
+}
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tabpanel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    if(btn.dataset.tab === 'post') refreshAttachListOptions();
-  });
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
 
 /* =========================================================
@@ -828,6 +832,7 @@ const FS_SUPPORTED = 'showSaveFilePicker' in window;
 const csvHandles = new Map();   // listId -> FileSystemFileHandle
 const pageHandles = new Map();  // listId -> FileSystemFileHandle
 let postHtmlHandle = null;
+let currentPostRow = null; // row object already added to a list's entries for this post draft, if any
 
 async function verifyPermission(handle){
   const opts = { mode: 'readwrite' };
@@ -904,27 +909,34 @@ document.getElementById('loadCsvInput').addEventListener('change', async (e) => 
   applyLoadedCsvRows(text, file.name);
 });
 
-async function saveCsvForList(){
-  const l = lists[currentListId];
-  if(!l.csvFile){ alert('Set a CSV filename first.'); return; }
+async function saveCsvForList(listId){
+  listId = listId || currentListId;
+  const l = lists[listId];
+  if(!l) return false;
+  if(!l.csvFile){ if(listId === currentListId) alert('Set a CSV filename first.'); return false; }
   const contents = serializeCSV(l.rows);
-  if(!FS_SUPPORTED){ downloadText(l.csvFile, contents, 'text/csv'); return; }
+  if(!FS_SUPPORTED){ downloadText(l.csvFile, contents, 'text/csv'); return true; }
   try{
-    let handle = csvHandles.get(currentListId);
+    let handle = csvHandles.get(listId);
     if(handle && !(await verifyPermission(handle))) handle = null;
     if(!handle){
       handle = await window.showSaveFilePicker({
         suggestedName: l.csvFile,
         types: [{ description: 'CSV file', accept: { 'text/csv': ['.csv'] } }]
       });
-      csvHandles.set(currentListId, handle);
-      if(handle.name && handle.name !== l.csvFile){ l.csvFile = handle.name; document.getElementById('listCsvFile').value = handle.name; }
+      csvHandles.set(listId, handle);
+      if(handle.name && handle.name !== l.csvFile){
+        l.csvFile = handle.name;
+        if(listId === currentListId) document.getElementById('listCsvFile').value = handle.name;
+      }
     }
     await writeToHandle(handle, contents);
     note('saved ' + handle.name + ' · ' + new Date().toLocaleTimeString());
-    updateListSaveStatus();
+    if(listId === currentListId) updateListSaveStatus();
+    return true;
   } catch(err){
-    if(err.name !== 'AbortError') alert('Save failed: ' + err.message);
+    if(err.name !== 'AbortError') alert('Saving "' + l.label + '" CSV failed: ' + err.message);
+    return false;
   }
 }
 
@@ -952,7 +964,7 @@ async function savePageForList(){
   }
 }
 
-document.getElementById('exportCsvBtn').addEventListener('click', saveCsvForList);
+document.getElementById('exportCsvBtn').addEventListener('click', () => saveCsvForList(currentListId));
 document.getElementById('exportPageBtn').addEventListener('click', savePageForList);
 
 function buildListPageHTML(l){
@@ -1667,17 +1679,34 @@ function renderPostPreview(){
 document.querySelectorAll('#metaTitle, #metaCategory, #metaDate, #metaDek, #metaTags, #metaReadTime, #heroAlt, #postBackLink, #postRelUrl')
   .forEach(el => el.addEventListener('input', scheduleSave));
 
-document.getElementById('clearPostBtn').addEventListener('click', () => {
-  if(!confirm('Clear all blocks and metadata for this post?')) return;
+function clearPostEditor(){
   blockListEl.innerHTML = '';
   postFileStore.clear();
   ['metaCategory','metaDate','metaTitle','metaDek','metaTags','metaReadTime','heroAlt','postBackLink','postRelUrl']
     .forEach(id => document.getElementById(id).value = '');
   document.getElementById('heroDrop').textContent = 'Drag & drop an image, or click to choose one';
   postHtmlHandle = null;
+  currentPostRow = null;
   updatePostSaveStatus();
   renderPostPreview();
+}
+
+document.getElementById('clearPostBtn').addEventListener('click', () => {
+  if(!confirm('Clear all blocks and metadata for this post?')) return;
+  clearPostEditor();
   scheduleSave();
+});
+
+document.getElementById('newPostForListBtn').addEventListener('click', () => {
+  const hasContent = blockListEl.children.length > 0 || pval('metaTitle').trim() !== '';
+  if(hasContent && !confirm('Start a new post? The current post draft (not yet saved) will be cleared.')) return;
+
+  clearPostEditor();
+  switchTab('post');
+  document.getElementById('attachList').value = currentListId;
+  document.getElementById('attachList').dispatchEvent(new Event('change'));
+  scheduleSave();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 /* ---------- Attach to list ---------- */
@@ -1698,13 +1727,16 @@ function refreshAttachListOptions(){
 document.getElementById('attachList').addEventListener('change', () => {
   const id = document.getElementById('attachList').value;
   const banner = document.getElementById('attachBanner');
+  if(currentPostRow && !(id && lists[id] && lists[id].rows.includes(currentPostRow))){
+    currentPostRow = null; // switched away from the list this draft's row lives in — next save starts a fresh entry there
+  }
   if(!id){ banner.classList.remove('show'); scheduleSave(); return; }
   const l = lists[id];
   const backEl = document.getElementById('postBackLink');
   const relEl = document.getElementById('postRelUrl');
   if(!backEl.value) backEl.value = l.isRoot ? '../index.html' : '../' + l.pageFile;
   if(!relEl.value) relEl.value = 'posts/' + (slugify(pval('metaTitle')) || 'new-post') + '.html';
-  banner.textContent = 'On export, an entry will be added to "' + l.label + '". Export that list\'s CSV afterward from the Lists tab.';
+  banner.textContent = 'Attached to "' + l.label + '" — saving this post will add/update its entry there and save that list\'s CSV automatically.';
   banner.classList.add('show');
   scheduleSave();
 });
@@ -1914,19 +1946,25 @@ document.getElementById('exportPostBtn').addEventListener('click', async () => {
     if(attachId && lists[attachId]){
       const l = lists[attachId];
       const tags = pval('metaTags').split(',').map(s => s.trim()).filter(Boolean);
-      l.rows.push({
-        id: String(l.rows.length+1).padStart(2,'0'),
+      const rowData = {
         title: pval('metaTitle') || 'Untitled post',
         description: pval('metaDek') || '',
         url: relUrl || ('posts/' + filename),
-        image: '',
         category: pval('metaCategory') || '',
         tag: tags[0] || '',
         date: pval('metaDate') || new Date().toISOString().slice(0,10)
-      });
+      };
+      if(currentPostRow && l.rows.includes(currentPostRow)){
+        Object.assign(currentPostRow, rowData);
+      } else {
+        currentPostRow = { id: String(l.rows.length+1).padStart(2,'0'), image: '', ...rowData };
+        l.rows.push(currentPostRow);
+      }
       renumberRows(l);
       if(currentListId === attachId) renderRowTable();
-      alert('Post saved, and an entry was added to "' + l.label + '". Switch to the Lists tab and save its CSV to publish the update.');
+
+      const csvSaved = await saveCsvForList(attachId);
+      note((csvSaved ? 'post + "' + l.label + '" CSV saved' : 'post saved — CSV not saved') + ' · ' + new Date().toLocaleTimeString());
     }
     scheduleSave();
   } catch(err){
